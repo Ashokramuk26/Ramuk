@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAISYS CORP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #1a202c;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header-section {
+            background: linear-gradient(to right, #191a51, #8b5cf6);
+            padding: 0.5rem 0.5rem;
+            border-radius: 1.0rem;
+            color: #ffffff;
+            text-align: center;
+           //box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }													
+
+        .summary-card {
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .summary-card.income {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .summary-card.expense {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .summary-card.balance {
+            background-color: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: #4f46e5;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #4338ca;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary {
+            background-color: #cbd5e1;
+            color: #475569;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #94a3b8;
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid #d1d5db;
+            background-color: #f9fafb;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .input:disabled {
+            background-color: #e5e7eb;
+            cursor: not-allowed;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        th {
+            background-color: #e2e8f0;
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem 1.5rem;
+            font-weight: 700;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            font-weight: 500;
+        }
+
+        .message-box.success {
+            background-color: #a7f3d0;
+            color: #065f46;
+        }
+
+        .message-box.error {
+            background-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .message-box.warning {
+            background-color: #fef08a;
+            color: #854d0e;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .grid-container {
+                grid-template-columns: 1fr 2fr;
+            }
+        }
+        .text-neon {
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #4f46e5, 0 0 20px #4f46e5, 0 0 25px #4f46e5, 0 0 30px #4f46e5, 0 0 35px #4f46e5;
+        }
+        .filter-button-group {
+            display: inline-flex;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background-color: #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .filter-button-group button {
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            border-radius: 0;
+            border: none;
+            cursor: pointer;
+        }
+
+        .filter-button-group button:first-child {
+            border-top-left-radius: 0.75rem;
+            border-bottom-left-radius: 0.75rem;
+        }
+
+        .filter-button-group button:last-child {
+            border-top-right-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+        }
+
+        .filter-button-group button.active {
+            background-color: #4f46e5;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header-section mb-2">
+          
+	<div class="header-section mb-2">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="text-center md:text-left mb-6 md:mb-0">
+                    <div class="flex items-center justify-center md:justify-start space-x-4">
+                        <img src="HaisysCorp1.png" alt="HAISYS CORP Logo" class="h-20 w-20 rectangle full shadow-lg">
+                        <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                            HAISYS CORP
+                        </h1>
+                    </div>
+          <p class="text-lg items md:text-6xl font-extra bold -light opacity-50 mt-2" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
+                        Finance Management
+                    </p>
+            <div class="mt-4 flex items-center justify-center space-x-2">
+                <p id="user-id" class="text-sm font-mono opacity-80"></p>
+                <button id="copy-user-id" class="p-1 rounded-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-colors duration-200" title="Copy User ID">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3-3H9a3 3 0 01-3-3z" />
+                    </svg>
+                </button>
+                <button id="sign-out-btn" class="p-1 rounded-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-colors duration-200" title="Sign Out">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div id="auth-container" class="min-h-screen flex items-center justify-center hidden">
+            <div class="card w-full max-w-md p-8 text-center">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Welcome to HAISYS CORP</h2>
+                
+                <form id="sign-in-form" class="space-y-4">
+                    <div>
+                        <input type="email" name="email" placeholder="Email" required class="input">
+                    </div>
+                    <div>
+                        <input type="password" name="password" placeholder="Password" required class="input">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Sign In</button>
+                    <p class="mt-4 text-sm text-gray-600">
+                        Don't have an account? <a href="#" id="show-sign-up" class="text-indigo-600 hover:underline">Sign Up</a>
+                    </p>
+                </form>
+
+                <form id="sign-up-form" class="space-y-4 hidden">
+                    <div>
+                        <input type="email" name="email" placeholder="Email" required class="input">
+                    </div>
+                    <div>
+                        <input type="password" name="password" placeholder="Password" required class="input">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full">Sign Up</button>
+                    <p class="mt-4 text-sm text-gray-600">
+                        Already have an account? <a href="#" id="show-sign-in" class="text-indigo-600 hover:underline">Sign In</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+        
+        <div id="dashboard-container" class="hidden">
+            <div class="bg-white p-4 rounded-xl shadow-lg mb-4">
+                <div class="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="statusBar" class="h-full rounded-full transition-all duration-500 ease-in-out"></div>
+                </div>
+                <div class="text-sm font-medium mt-2 flex justify-between items-center">
+                    <span id="statusText" class="text-gray-700">Disconnected</span>
+                    <span id="notificationMessage" class="text-xs text-gray-500 transition-opacity duration-300 opacity-0"></span>
+                </div>
+            </div>
+
+            <div class="card grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                <div class="summary-card income">
+                    <span class="text-xs font-semibold uppercase">Total Income</span>
+                    <span id="total-income" class="block text-3xl font-extrabold mt-2">$0.00</span>
+                </div>
+                <div class="summary-card expense">
+                    <span class="text-xs font-semibold uppercase">Total Expense</span>
+                    <span id="total-expense" class="block text-3xl font-extrabold mt-2">$0.00</span>
+                </div>
+                <div class="summary-card balance">
+                    <span class="text-xs font-semibold uppercase">Net Balance</span>
+                    <span id="net-balance" class="block text-4xl font-extrabold mt-1 text-gray-800">$0.00</span>
+                </div>
+            </div>
+
+            <main class="grid-container">
+                <div class="space-y-8">
+                    <div class="card">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Record New Transaction</h2>
+                        <form id="transaction-form" class="space-y-4">
+                            <div>
+                                <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                <input type="date" id="date" required class="input">
+                            </div>
+                            <div>
+                                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <input type="text" id="description" required placeholder="e.g., Office supplies" class="input">
+                            </div>
+                            <div>
+                                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <select id="category" required class="input">
+					<option value="CompanyExpense">CompanyExpense</option>
+ 					<option value="Revenue In">Revenue In</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Salary">Salary</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Rent">Rent</option>
+                                   <option value="Food">Food</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                   <option value="OfficeSupplies">OfficeSupplies</option>
+ 				   <option value="Miscellaneous">Miscellaneous</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                                <input type="number" id="amount" step="0.01" required placeholder="e.g., 50.00" class="input">
+                            </div>
+                            <div>
+                                <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                <select id="type" required class="input">
+                                    <option value="Income">Income</option>
+                                    <option value="Expense">Expense</option>
+                                </select>
+                            </div>
+                            <div class="flex space-x-4">
+                                <button type="submit" id="add-transaction-btn" class="btn btn-primary w-full">Record Transaction</button>
+                                <button type="button" id="cancel-edit-btn" class="btn btn-secondary w-full hidden">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="card overflow-x-auto">
+                        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
+                            <h2 class="text-2xl font-bold text-gray-800">Transaction History</h2>
+                            <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                               <div class="flex space-x-2 w-full">
+                                   <input type="date" id="start-date-filter" class="input w-1/2">
+                                   <input type="date" id="end-date-filter" class="input w-1/2">
+                                   <button id="filter-date-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300">
+                                       Filter
+                                   </button>
+                               </div>
+                               <input type="text" id="filter-input" placeholder="Search..." class="input w-full sm:w-60">
+                            </div>
+                        </div>
+
+                        <div id="type-filter-container" class="flex justify-end mb-4">
+                            <div class="filter-button-group">
+                                <button data-type="all" class="bg-indigo-600 text-white hover:bg-indigo-700 active">All</button>
+                                <button data-type="income" class="bg-gray-200 text-gray-800 hover:bg-gray-300">Income</button>
+                                <button data-type="expense" class="bg-gray-200 text-gray-800 hover:bg-gray-300">Expense</button>
+                            </div>
+                        </div>
+
+                        <table class="min-w-full bg-white rounded-xl shadow-lg">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-table-body">
+                                </tbody>
+                        </table>
+                        
+                        <div id="pagination-container" class="flex justify-between items-center mt-4">
+                            <button id="prev-page-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50">Previous</button>
+                            <span id="page-info" class="text-gray-600">Page 1 of 1</span>
+                            <button id="next-page-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50">Next</button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-center bg-gray-100 p-6 rounded-2xl shadow-inner">
+                        <button id="export-btn" class="w-full sm:w-auto px-8 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 transform hover:scale-105 mb-4 sm:mb-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
+                            Export to Excel (CSV)
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <label id="import-btn-label" for="import-input" class="w-full sm:w-auto cursor-pointer px-8 py-3 font-semibold rounded-lg shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300 transform hover:scale-105 text-center bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                                Import from Excel (CSV)
+                            </label>
+                            <input type="file" id="import-input" class="hidden" accept=".csv">
+                        </div>
+                    </div>
+
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Financial Overview</h2>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="w-full bg-white rounded-2xl shadow-lg p-4 no-flex">
+                                <canvas id="range-chart" style="width: 400%; height: 400px;"></canvas>
+                            </div>
+                            <div class="w-full bg-white rounded-2xl shadow-lg p-4 no-flex">
+                                <canvas id="trend-chart" style="width: 400%; height: 400px;"></canvas>
+                            </div>
+                            <div class="w-full bg-white rounded-2xl shadow-lg p-4 no-flex">
+                                <canvas id="category-chart" style="width: 400%; height: 400px;" ></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="message-box" class="message-box hidden"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+       // const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+
+
+const firebaseConfig = {
+ 	apiKey: "AIzaSyB0wk42yD9mEhDlXEPi2-MFBBz8gLCz0Kw",
+    authDomain: "haisys-corp.firebaseapp.com",
+    projectId: "haisys-corp",
+    storageBucket: "haisys-corp.firebasestorage.app",
+    messagingSenderId: "17791097890",
+    appId: "1:17791097890:web:fc9f209a624395085ffe7b",
+    measurementId: "G-Z0QYK6R2CF"
+  };
+
+
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Global variables for Firebase services
+        let app;
+        let db;
+        let auth;
+        let userId;
+        let unsubscribeFromFirestore = null;
+        let currentTypeFilter = 'all';
+        let editingDocId = null;
+
+        // UI element references
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const authContainer = document.getElementById('auth-container');
+        const signInForm = document.getElementById('sign-in-form');
+        const signUpForm = document.getElementById('sign-up-form');
+        const signOutBtn = document.getElementById('sign-out-btn');
+        const showSignUpBtn = document.getElementById('show-sign-up');
+        const showSignInBtn = document.getElementById('show-sign-in');
+        const transactionsTableBody = document.getElementById('transactions-table-body');
+        const totalIncomeSpan = document.getElementById('total-income');
+        const totalExpenseSpan = document.getElementById('total-expense');
+        const netBalanceSpan = document.getElementById('net-balance');
+        const transactionForm = document.getElementById('transaction-form');
+        const formInputs = document.querySelectorAll('#transaction-form input, #transaction-form select, #transaction-form button');
+        const exportBtn = document.getElementById('export-btn');
+        const importInput = document.getElementById('import-input');
+        const importBtnLabel = document.getElementById('import-btn-label');
+        const messageBox = document.getElementById('message-box');
+        const filterInput = document.getElementById('filter-input');
+        const startDateFilter = document.getElementById('start-date-filter');
+        const endDateFilter = document.getElementById('end-date-filter');
+        const typeFilterContainer = document.getElementById('type-filter-container');
+        const userIdDisplay = document.getElementById('user-id');
+        const copyUserIdBtn = document.getElementById('copy-user-id');
+        const addTransactionBtn = document.getElementById('add-transaction-btn');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const filterDateBtn = document.getElementById('filter-date-btn');
+        
+        // UI elements for Connection Status
+        const statusBar = document.getElementById('statusBar');
+        const statusText = document.getElementById('statusText');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const prevPageBtn = document.getElementById('prev-page-btn');
+        const nextPageBtn = document.getElementById('next-page-btn');
+        const pageInfoSpan = document.getElementById('page-info');
+
+        // Global Chart instances
+        let trendChart;
+        let categoryChart;
+        let rangeChart;
+
+        // Pagination variables
+        let currentPage = 1;
+        const transactionsPerPage = 10;
+        let allTransactions = [];
+
+        /**
+         * Updates the UI to reflect the connection status.
+         * @param {string} state - 'connecting', 'connected', 'disconnected', 'error'
+         * @param {string} text - The text to display on the status bar.
+         * @param {string} message - The notification message below the status bar.
+         */
+        function updateStatus(state, text, message = '') {
+            statusBar.className = 'h-full rounded-full transition-all duration-500 ease-in-out';
+            statusText.textContent = text;
+            notificationMessage.textContent = message;
+            
+            // Show/hide notification message with a small delay
+            if (message) {
+                notificationMessage.classList.remove('opacity-0');
+                notificationMessage.classList.add('opacity-100');
+            } else {
+                notificationMessage.classList.remove('opacity-100');
+                notificationMessage.classList.add('opacity-0');
+            }
+
+            switch (state) {
+                case 'connecting':
+                    statusBar.classList.add('bg-blue-500', 'w-1/2');
+                    break;
+                case 'connected':
+                    statusBar.classList.add('bg-green-500', 'w-full');
+                    statusText.classList.add('text-white');
+                    break;
+                case 'disconnected':
+                    statusBar.classList.add('bg-gray-200', 'w-0');
+                    statusText.classList.remove('text-white');
+                    break;
+                case 'error':
+                    statusBar.classList.add('bg-red-500', 'w-full');
+                    statusText.classList.add('text-white');
+                    break;
+            }
+        }
+
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`;
+            messageBox.style.opacity = '1';
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.style.opacity = '0';
+                setTimeout(() => messageBox.classList.add('hidden'), 500);
+            }, 2000);
+        }
+        
+        const setDashboardState = (isAuthenticated) => {
+            if (isAuthenticated) {
+                authContainer.classList.add('hidden');
+                dashboardContainer.classList.remove('hidden');
+                
+            } else {
+                authContainer.classList.remove('hidden');
+                dashboardContainer.classList.add('hidden');
+            }
+        };
+
+        const initFirebase = () => {
+            try {
+                if (!firebaseConfig) {
+                    showMessage('Firebase config is missing.', 'error');
+                    updateStatus('error', 'Config Missing', 'Firebase configuration data is unavailable.');
+                    return;
+                }
+                
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                updateStatus('connecting', 'Connecting...', 'Initializing Firebase services.');
+
+                // onAuthStateChanged is the most reliable way to handle user state
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        // User is signed in. We can now safely set up Firestore listener.
+                        userId = user.uid;
+                        userIdDisplay.textContent = `User ID: ${userId}`;
+                        setDashboardState(true);
+                        updateStatus('connected', 'Connected', 'User authenticated and database connected.');
+                        setupRealtimeListener();
+                    } else {
+                        // User is signed out. Clear state and try to authenticate.
+                        userId = null;
+                        userIdDisplay.textContent = '';
+                        setDashboardState(false);
+                        if (unsubscribeFromFirestore) {
+                             unsubscribeFromFirestore();
+                             unsubscribeFromFirestore = null;
+                        }
+                        try {
+                            // Try to sign in with the custom token or anonymously
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (error) {
+                            console.error("Authentication failed:", error);
+                            showMessage("Authentication failed. Check console for details.", 'error');
+                            updateStatus('error', 'Auth Failed', `Authentication failed: ${error.message}`);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase initialization failed:", error);
+                showMessage('Firebase initialization failed. Check console for details.', 'error');
+                updateStatus('error', 'Init Failed', `Initialization failed: ${error.message}`);
+            }
+        };
+
+        const getPrivateTransactionsCollection = () => {
+             return collection(db, `artifacts/${appId}/users/${userId}/transactions`);
+        }
+        
+        const setupRealtimeListener = () => {
+            if (unsubscribeFromFirestore) {
+                unsubscribeFromFirestore();
+            }
+            if (!db || !userId) {
+                console.error("Database or User ID is not ready.");
+                return;
+            }
+            const q = query(getPrivateTransactionsCollection());
+            unsubscribeFromFirestore = onSnapshot(q, (snapshot) => {
+                allTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderTotals(allTransactions);
+                updateCharts(allTransactions);
+                renderFilteredTransactions();
+            }, (error) => {
+                console.error("Error fetching data:", error);
+                showMessage('Error fetching data: ' + error.message, 'error');
+            });
+        };
+
+        const renderFilteredTransactions = () => {
+            transactionsTableBody.innerHTML = '';
+            const searchText = filterInput.value.toLowerCase();
+            const startDate = startDateFilter.value;
+            const endDate = endDateFilter.value;
+            
+            let filteredTransactions = allTransactions.filter(t => {
+                const transactionDate = t.date;
+                const textMatch = t.description.toLowerCase().includes(searchText) || t.category.toLowerCase().includes(searchText);
+                const dateMatch = (!startDate || transactionDate >= startDate) && (!endDate || transactionDate <= endDate);
+                const typeMatch = currentTypeFilter === 'all' || t.type.toLowerCase() === currentTypeFilter.toLowerCase();
+                return textMatch && dateMatch && typeMatch;
+            });
+            
+            filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const totalPages = Math.ceil(filteredTransactions.length / transactionsPerPage);
+            if (currentPage > totalPages && totalPages > 0) {
+                currentPage = totalPages;
+            } else if (totalPages === 0) {
+                currentPage = 1;
+            }
+
+            const startIndex = (currentPage - 1) * transactionsPerPage;
+            const endIndex = startIndex + transactionsPerPage;
+            const transactionsToShow = filteredTransactions.slice(startIndex, endIndex);
+
+            pageInfoSpan.textContent = `Page ${currentPage} of ${totalPages > 0 ? totalPages : 1}`;
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+
+            if (transactionsToShow.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="5" class="p-4 text-center text-gray-500">No transactions found.</td>`;
+                transactionsTableBody.appendChild(row);
+                return;
+            }
+            transactionsToShow.forEach(transaction => {
+                const row = document.createElement('tr');
+                const amountClass = transaction.type === 'Income' ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold';
+                row.innerHTML = `
+                    <td class="p-4 whitespace-nowrap">${transaction.date}</td>
+                    <td class="p-4 whitespace-nowrap">${transaction.description}</td>
+                    <td class="p-4 whitespace-nowrap">${transaction.category}</td>
+                    <td class="p-4 whitespace-nowrap ${amountClass}">$${transaction.amount.toFixed(2)}</td>
+                    <td class="p-4 whitespace-nowrap flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-800 transition-colors duration-200" onclick="handleEdit('${transaction.id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button class="text-red-600 hover:text-red-800 transition-colors duration-200" onclick="handleDelete('${transaction.id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                transactionsTableBody.appendChild(row);
+            });
+        };
+
+        const renderTotals = (transactions) => {
+            const totalIncome = transactions.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpense = transactions.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0);
+            const netBalance = totalIncome - totalExpense;
+
+            totalIncomeSpan.textContent = `$${totalIncome.toFixed(2)}`;
+            totalExpenseSpan.textContent = `$${totalExpense.toFixed(2)}`;
+            netBalanceSpan.textContent = `$${netBalance.toFixed(2)}`;
+            netBalanceSpan.className = `block text-4xl font-extrabold mt-1 ${netBalance >= 0 ? 'text-green-600' : 'text-red-600'}`;
+        };
+
+        const updateCharts = (transactions) => {
+            // Group transactions by month and year for the trend chart
+            const monthlyData = transactions.reduce((acc, t) => {
+                const date = new Date(t.date);
+                const month = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+                if (!acc[month]) {
+                    acc[month] = { income: 0, expense: 0 };
+                }
+                if (t.type === 'Income') {
+                    acc[month].income += t.amount;
+                } else {
+                    acc[month].expense += t.amount;
+                }
+                return acc;
+            }, {});
+
+            const sortedMonths = Object.keys(monthlyData).sort((a, b) => new Date(a) - new Date(b));
+            const incomeData = sortedMonths.map(month => monthlyData[month].income);
+            const expenseData = sortedMonths.map(month => monthlyData[month].expense);
+
+            if (trendChart) trendChart.destroy();
+            const trendCtx = document.getElementById('trend-chart').getContext('2d');
+            trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: incomeData,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1,
+                            fill: false
+                        },
+                        {
+                            label: 'Expense',
+                            data: expenseData,
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.1,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Calculate data for the category chart
+            const categoryData = transactions.reduce((acc, t) => {
+                if (!acc[t.category]) {
+                    acc[t.category] = 0;
+                }
+                acc[t.category] += t.amount;
+                return acc;
+            }, {});
+
+            const categoryLabels = Object.keys(categoryData);
+            const categoryValues = Object.values(categoryData);
+            const backgroundColors = categoryLabels.map(() => `hsl(${Math.random() * 360}, 70%, 50%)`);
+
+            if (categoryChart) categoryChart.destroy();
+            const categoryCtx = document.getElementById('category-chart').getContext('2d');
+            categoryChart = new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        data: categoryValues,
+                        backgroundColor: backgroundColors,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Calculate data for the range chart
+            const rangeData = transactions.reduce((acc, t) => {
+                const amount = t.amount;
+                let range;
+                if (amount < 20) {
+                    range = '< $20';
+                } else if (amount < 50) {
+                    range = '$20 - $50';
+                } else if (amount < 100) {
+                    range = '$50 - $100';
+                } else {
+                    range = '> $100';
+                }
+                acc[range] = (acc[range] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const rangeLabels = ['< $20', '$20 - $50', '$50 - $100', '> $100'];
+            const rangeValues = rangeLabels.map(label => rangeData[label] || 0);
+
+            if (rangeChart) rangeChart.destroy();
+            const rangeCtx = document.getElementById('range-chart').getContext('2d');
+            rangeChart = new Chart(rangeCtx, {
+                type: 'bar',
+                data: {
+                    labels: rangeLabels,
+                    datasets: [{
+                        label: 'Number of Transactions',
+                        data: rangeValues,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        };
+
+        const clearForm = () => {
+            transactionForm.reset();
+            addTransactionBtn.textContent = 'Record Transaction';
+            addTransactionBtn.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
+            addTransactionBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            cancelEditBtn.classList.add('hidden');
+            editingDocId = null;
+        };
+
+        window.handleDelete = async (docId) => {
+            if (!userId) {
+                showMessage('You must be logged in to delete transactions.', 'error');
+                return;
+            }
+            try {
+                const docRef = doc(getPrivateTransactionsCollection(), docId);
+                await deleteDoc(docRef);
+                showMessage('Transaction deleted successfully!');
+            } catch (e) {
+                console.error("Error removing document: ", e);
+                showMessage("Failed to delete transaction.", 'error');
+            }
+        };
+
+        window.handleEdit = async (docId) => {
+            if (!userId) {
+                showMessage('You must be logged in to edit transactions.', 'error');
+                return;
+            }
+            try {
+                const docRef = doc(getPrivateTransactionsCollection(), docId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('date').value = data.date;
+                    document.getElementById('description').value = data.description;
+                    document.getElementById('category').value = data.category;
+                    document.getElementById('amount').value = data.amount;
+                    document.getElementById('type').value = data.type;
+                    
+                    addTransactionBtn.textContent = 'Save Changes';
+                    addTransactionBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                    addTransactionBtn.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+                    cancelEditBtn.classList.remove('hidden');
+
+                    editingDocId = docId;
+                } else {
+                    showMessage("Transaction not found.", 'error');
+                }
+            } catch (error) {
+                console.error("Error fetching document for edit:", error);
+                showMessage("Failed to load transaction data for editing.", 'error');
+            }
+        };
+
+        transactionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) {
+                showMessage('You must be logged in to record transactions.', 'error');
+                return;
+            }
+
+            const date = document.getElementById('date').value;
+            const description = document.getElementById('description').value;
+            const category = document.getElementById('category').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const type = document.getElementById('type').value;
+
+            if (!date || !description || !category || isNaN(amount) || amount <= 0 || !type) {
+                showMessage("Please fill in all fields correctly.", 'error');
+                return;
+            }
+
+            const transactionData = {
+                date: date,
+                description: description,
+                category: category,
+                amount: amount,
+                type: type,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                if (editingDocId) {
+                    const docRef = doc(getPrivateTransactionsCollection(), editingDocId);
+                    await updateDoc(docRef, transactionData);
+                    showMessage('Transaction updated successfully!');
+                } else {
+                    await addDoc(getPrivateTransactionsCollection(), transactionData);
+                    showMessage('Transaction added successfully!');
+                }
+                clearForm();
+            } catch (e) {
+                console.error("Error saving document: ", e);
+                showMessage("Failed to save transaction.", 'error');
+            }
+        });
+
+        cancelEditBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            clearForm();
+            showMessage('Edit cancelled.', 'warning');
+        });
+
+        exportBtn.addEventListener('click', async () => {
+            if (!userId) {
+                showMessage('You must be logged in to export transactions.', 'error');
+                return;
+            }
+            try {
+                const querySnapshot = await getDocs(getPrivateTransactionsCollection());
+                const transactions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                if (transactions.length === 0) {
+                    showMessage('No transactions to export.', 'error');
+                    return;
+                }
+                
+                const headers = ['Date', 'Description', 'Category', 'Amount', 'Type'];
+                const rows = transactions.map(t => [t.date, t.description, t.category, t.amount, t.type]);
+                let csvContent = "data:text/csv;charset=utf-8," +
+                    headers.join(",") + "\n" +
+                    rows.map(e => e.join(",")).join("\n");
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `haisys_transactions_${new Date().toISOString().slice(0, 10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showMessage('Transactions exported successfully!');
+            } catch (error) {
+                console.error("Error exporting transactions: ", error);
+                showMessage(`Error exporting transactions: ${error.message}`, 'error');
+            }
+        });
+
+        importInput.addEventListener('change', (e) => {
+            if (!userId) {
+                showMessage('You must be logged in to import transactions.', 'error');
+                importInput.value = '';
+                return;
+            }
+            
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const csvContent = event.target.result;
+                const rows = csvContent.split('\n').filter(row => row.trim() !== '');
+                if (rows.length < 2) {
+                    showMessage('The CSV file is empty or has no data rows.', 'error');
+                    importInput.value = '';
+                    return;
+                }
+                const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
+                const transactionsToImport = [];
+
+                if (!headers.includes('date') || !headers.includes('description') || !headers.includes('category') || !headers.includes('amount') || !headers.includes('type')) {
+                    showMessage('Invalid CSV format. Please ensure it contains Date, Description, Category, Amount, and Type columns.', 'error');
+                    importInput.value = '';
+                    return;
+                }
+
+                for (let i = 1; i < rows.length; i++) {
+                    const values = rows[i].split(',');
+                    if (values.length !== headers.length) continue;
+
+                    const transaction = {};
+                    headers.forEach((header, index) => {
+                        transaction[header] = values[index].trim();
+                    });
+
+                    transactionsToImport.push({
+                        date: transaction.date,
+                        description: transaction.description,
+                        category: transaction.category,
+                        amount: parseFloat(transaction.amount),
+                        type: transaction.type,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+                
+                if (transactionsToImport.length > 0) {
+                    const batch = transactionsToImport.map(t => addDoc(getPrivateTransactionsCollection(), t));
+                    try {
+                        await Promise.all(batch);
+                        showMessage(`Successfully imported ${transactionsToImport.length} transactions.`, 'success');
+                    } catch (error) {
+                        console.error("Error importing transactions: ", error);
+                        showMessage(`Error importing transactions: ${error.message}`, 'error');
+                    }
+                }
+                importInput.value = '';
+            };
+            reader.readAsText(file);
+        });
+
+        const updateTypeFilterButtons = (selectedType) => {
+            document.querySelectorAll('#type-filter-container button').forEach(button => {
+                if (button.dataset.type === selectedType) {
+                    button.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
+                    button.classList.remove('bg-gray-200', 'text-gray-800', 'hover:bg-gray-300');
+                } else {
+                    button.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700');
+                    button.classList.add('bg-gray-200', 'text-gray-800', 'hover:bg-gray-300');
+                }
+            });
+        };
+
+        const reRenderUI = () => {
+            currentPage = 1;
+            renderFilteredTransactions();
+        };
+
+        filterInput.addEventListener('input', reRenderUI);
+        startDateFilter.addEventListener('input', reRenderUI);
+        endDateFilter.addEventListener('input', reRenderUI);
+        filterDateBtn.addEventListener('click', reRenderUI);
+
+        typeFilterContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                const type = e.target.dataset.type;
+                currentTypeFilter = type;
+                updateTypeFilterButtons(type);
+                reRenderUI();
+            }
+        });
+        
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderFilteredTransactions();
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(allTransactions.length / transactionsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderFilteredTransactions();
+            }
+        });
+
+
+        copyUserIdBtn.addEventListener('click', () => {
+            if (userId) {
+                navigator.clipboard.writeText(userId).then(() => {
+                    showMessage('User ID copied to clipboard!');
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
+                    showMessage('Failed to copy User ID.', 'error');
+                });
+            }
+        });
+
+        // Authentication form handlers
+        signInForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = signInForm['email'].value;
+            const password = signInForm['password'].value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showMessage('Successfully signed in!');
+                signInForm.reset();
+            } catch (error) {
+                showMessage(`Sign-in failed: ${error.message}`, 'error');
+            }
+        });
+
+        signUpForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = signUpForm['email'].value;
+            const password = signUpForm['password'].value;
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                showMessage('Account created successfully!');
+                signUpForm.reset();
+            } catch (error) {
+                showMessage(`Sign-up failed: ${error.message}`, 'error');
+            }
+        });
+
+        signOutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                showMessage('Signed out successfully!');
+                location.reload(); // Simple way to reset state
+            } catch (error) {
+                showMessage(`Sign out failed: ${error.message}`, 'error');
+            }
+        });
+
+        showSignUpBtn.addEventListener('click', () => {
+            signInForm.classList.add('hidden');
+            signUpForm.classList.remove('hidden');
+        });
+
+        showSignInBtn.addEventListener('click', () => {
+            signUpForm.classList.add('hidden');
+            signInForm.classList.remove('hidden');
+        });
+        
+        window.handleDelete = handleDelete;
+        window.handleEdit = handleEdit;
+        window.onload = () => {
+          initFirebase();
+          updateTypeFilterButtons('all');
+        };
+    </script>
+</body>
+</html>

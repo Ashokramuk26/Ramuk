@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAISYS CORP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS library for Excel file handling -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Softer, professional background */
+        }
+        .app-card {
+            background-color: white; /* full background color */
+            padding: 2.5rem;
+            border-radius: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s ease-in-out;
+        }
+        .app-card:hover {
+            transform: translateY(-5px);
+        }
+        .section-card {
+            background-color: #ffffff;  /* #ffffff white background color  after summarry cards */
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .transaction-item {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            background-color: #ebedf0; /* #f8fafc table background color */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.15s ease-in-out;
+        }
+        .transaction-item:hover {
+            background-color: #95d6ed; /*#f1f5e8 transaction tabele hover*/
+        }
+        @media (min-width: 640px) { /* sm breakpoint */
+            .transaction-item {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+        @media (max-width: 639px) { /* Adjust mobile layout */
+            .transaction-item .mobile-hidden {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center pt-12 pb-10 px-4">
+    <!-- Main Application Card -->
+    <div class="app-card w-full max-w-7xl mx-auto flex flex-col gap-8">
+        <!-- Auth Section -->
+        <div id="authSection" class="flex flex-col gap-6 transition-opacity duration-500 ease-in-out">
+            <header class="text-center">
+                <h1 class="text-5xl font-extrabold text-white bg-indigo-600 py-3 px-6 rounded-full inline-block mx-auto">HAISYS CORP</h1>
+                <p class="text-sm text-gray-500 mt-2">Sign in to manage your finances & Payroll</p>
+            </header>
+
+            <!-- Login Form -->
+            <div id="loginFormContainer" class="section-card">
+                <h2 class="text-2xl font-semibold text-gray-700 text-center mb-6">Log In</h2>
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="loginEmail" placeholder="you@example.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2" required>
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="loginPassword" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2" required>
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                        Log In
+                    </button>
+                </form>
+                <div id="loginMessage" class="text-center text-sm text-red-500 mt-4"></div>
+                <div class="text-center text-sm mt-4">
+                    Don't have an account? <a href="#" id="showSignupLink" class="text-indigo-600 hover:text-indigo-800 font-medium transition duration-150 ease-in-out">Sign Up</a>
+                </div>
+            </div>
+
+            <!-- Sign Up Form (Initially Hidden) -->
+            <div id="signupFormContainer" class="hidden section-card">
+                <h2 class="text-2xl font-semibold text-gray-700 text-center mb-6">Sign Up</h2>
+                <form id="signupForm" class="space-y-4">
+                    <div>
+                        <label for="signupEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="signupEmail" placeholder="you@example.com" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2" required>
+                    </div>
+                    <div>
+                        <label for="signupPassword" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="signupPassword" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2" required>
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                        Sign Up
+                    </button>
+                </form>
+                <div id="signupMessage" class="text-center text-sm text-red-500 mt-4"></div>
+                <div class="text-center text-sm mt-4">
+                    Already have an account? <a href="#" id="showLoginLink" class="text-indigo-600 hover:text-indigo-800 font-medium transition duration-150 ease-in-out">Log In</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Dashboard Section (Initially Hidden) -->
+        <div id="mainDashboard" class="hidden flex flex-col gap-8 transition-opacity duration-500 ease-in-out">
+            <!-- Header and Summary Section -->
+            <div class="space-y-8">
+                <header class="text-center">
+                    <h1 class="text-5xl font-extrabold text-white bg-indigo-600 py-3 px-6 rounded-full inline-block mx-auto mb-4">HAISYS CORP</h1>
+                    <p class="text-sm text-gray-500 mt-2">Finance management.</p>
+                </header>
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div id="userIdDisplay" class="text-xs text-gray-400"></div>
+                    <div class="flex flex-wrap gap-2">
+
+		<a href="C:\Users\ashok\NewApp\Payroll2.html" 
+           class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-lg duration-150 ease-in-out">
+            Payroll 
+        </a>
+
+
+                        <button id="taxCalculatorBtn" class="py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                            Tax Calculator
+                        </button>
+
+
+		   
+                        <button id="logoutBtn" class="py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+                <div id="summary" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-green-50 p-6 rounded-xl shadow-sm text-center">
+                        <h3 class="text-base text-green-800 font-semibold">Total Income</h3>
+                        <p id="totalIncome" class="text-3xl font-bold text-green-800 mt-2">$0.00</p>
+                    </div>
+                    <div class="bg-red-50 p-6 rounded-xl shadow-sm text-center">
+                        <h3 class="text-base text-red-800 font-semibold">Total Expenses</h3>
+                        <p id="totalExpenses" class="text-3xl font-bold text-red-800 mt-2">$0.00</p>
+                    </div>
+                    <div class="bg-green-50 p-6 rounded-xl shadow-sm text-center">
+                        <h3 class="text-base text-green-800 font-semibold">Net Balance</h3>
+                        <p id="netBalance" class="text-3xl font-bold text-green-800 mt-2">$0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New and Updated Layout for Form and Transactions -->
+            <div class="w-full flex flex-col lg:flex-row gap-8">
+                <!-- Add/Edit Transaction Form -->
+                <div class="lg:w-1/3 section-card">
+                    <h2 id="formTitle" class="text-xl font-semibold text-gray-700 mb-6">Add New Transaction</h2>
+                    <form id="transactionForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
+                        <input type="hidden" id="transactionId">
+                        
+                        <!-- Subtotal and HST -->
+                        <div class="col-span-1">
+                            <label for="subtotal" class="block text-sm font-medium text-gray-700">Subtotal ($)</label>
+                            <input type="number" id="subtotal" placeholder="e.g., 5.00" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" step="0.01" required>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="hstPercentage" class="block text-sm font-medium text-gray-700">HST %</label>
+                            <input type="number" id="hstPercentage" value="0" placeholder="e.g., 13" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" step="0.01">
+                        </div>
+
+                        <!-- Description and Date -->
+                        <div class="col-span-1">
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                            <input type="text" id="description" placeholder="e.g., Coffee, Salary" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
+                            <select id="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                                <option value="expense">Expense</option>
+                                <option value="income">Income</option>
+                            </select>
+                        </div>
+
+                        <!-- Category and Custom Category -->
+                        <div class="col-span-1">
+                            <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                            <select id="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                                <option value="" disabled selected>Select a category</option>
+                                <option value="Food">Food</option>
+                                <option value="Emp Salary">Emp Salary</option>
+                                <option value="Rent">Rent</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Transportation">Transportation</option>
+				<option value="Vehicle Maintenance">Vehicle Maintenance</option>
+				<option value="Vehicle Fuel">Vehicle Fuel</option>
+                                <option value="Revenue In">Revenue In</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Company Expense">Company Expense</option>
+                                <option value="Investment">Investment</option>
+                                <option value="Custom">Other / Custom</option>
+                            </select>
+                        </div>
+                        <div class="col-span-1">
+                            <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                        </div>
+                        
+                        <div id="customCategoryContainer" class="col-span-1 hidden">
+                            <label for="customCategory" class="block text-sm font-medium text-gray-700">Custom Category</label>
+                            <input type="text" id="customCategory" placeholder="Enter custom category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                        </div>
+                        
+                        <!-- Buttons -->
+                        <div class="col-span-full flex flex-col sm:flex-row gap-4 mt-2">
+                           <button type="submit" id="submitBtn" class="flex-1 py-2 px-4 rounded-full shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition duration-150 ease-in-out">
+                                Add Transaction
+                            </button>
+                            <button type="button" id="cancelEditBtn" class="flex-1 hidden py-2 px-4 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 transition duration-150 ease-in-out">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Transaction List and Filters Section -->
+                <div class="lg:w-2/3 w-full space-y-4">
+                    <div class="section-card">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-4">Transactions</h2>
+                        
+                        <!-- Filter Section -->
+                        <div id="filterSection" class="bg-gray-50 p-4 rounded-xl shadow-inner border border-gray-200 space-y-4 mb-4">
+                            <h3 class="text-sm font-medium text-gray-700">Filters</h3>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <div class="flex-1">
+                                    <label for="filterDescription" class="block text-sm font-medium text-gray-700">Description</label>
+                                    <input type="text" id="filterDescription" placeholder="Filter by description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                                </div>
+                                <div class="flex-1">
+                                    <label for="filterType" class="block text-sm font-medium text-gray-700">Type</label>
+                                    <select id="filterType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                                        <option value="all">All</option>
+                                        <option value="income">Income</option>
+                                        <option value="expense">Expense</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <div class="flex-1">
+                                    <label for="filterStartDate" class="block text-sm font-medium text-gray-700">Start Date</label>
+                                    <input type="date" id="filterStartDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                                </div>
+                                <div class="flex-1">
+                                    <label for="filterEndDate" class="block text-sm font-medium text-gray-700">End Date</label>
+                                    <input type="date" id="filterEndDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                                </div>
+                            </div>
+                            <div class="flex justify-between gap-4">
+                                <button id="filterBtn" class="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                                    Apply Filters
+                                </button>
+                                <button id="resetFiltersBtn" class="flex-1 flex justify-center py-2 px-4 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                                    Reset Filters
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Column Headers -->
+                        <div class="hidden sm:grid grid-cols-6 font-extrabold text-white text-xs uppercase tracking-wider bg-indigo-600 p-3 rounded-xl mb-4">
+                            <div class="pl-2">Date</div>
+                            <div class="pl-2">Description</div>
+                            <div class="text-center">Subtotal</div>
+                            <div class="text-center">HST</div>
+                            <div class="text-center">Total Amount</div>
+                            <div class="text-right pr-4">Actions</div>
+                        </div>
+                        
+                        <div id="transactionList" class="space-y-4 pr-2">
+                            <!-- Transactions will be dynamically added here -->
+                        </div>
+                        <p id="noTransactions" class="text-center text-gray-400 mt-4">No transactions yet. Add one above!</p>
+                        <div id="pagination" class="flex justify-center items-center space-x-4 mt-4 hidden">
+                            <button id="prevBtn" class="px-4 py-2 border rounded-full text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                Previous
+                            </button>
+                            <span id="pageInfo" class="text-sm text-gray-600">Page 1 of 1</span>
+                            <button id="nextBtn" class="px-4 py-2 border rounded-full text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                Next
+                            </button>
+                        </div>
+                        <div class="flex justify-center flex-wrap gap-4 mt-6">
+                            <button id="importBtn" class="py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                                Import
+                            </button>
+                            <button id="exportBtn" class="py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New HST Banners Section -->
+            <div id="hstSummary" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-amber-50 p-6 rounded-xl shadow-sm text-center">
+                    <h3 class="text-base text-amber-600 font-semibold">Total HST Collected</h3>
+                    <p id="totalHstCollected" class="text-3xl font-bold text-amber-800 mt-2">$0.00</p>
+                </div>
+                <div class="bg-fuchsia-50 p-6 rounded-xl shadow-sm text-center">
+                    <h3 class="text-base text-fuchsia-600 font-semibold">Total HST Paid</h3>
+                    <p id="totalHstPaid" class="text-3xl font-bold text-fuchsia-800 mt-2">$0.00</p>
+                </div>
+            </div>
+            
+            <hr class="border-t-2 border-gray-200 my-4" />
+
+            <!-- Chart Section at the bottom -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+                <!-- Monthly Bar Chart -->
+                <div class="section-card flex flex-col items-center justify-center">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Monthly Income vs. Expense</h2>
+                    <div class="relative w-full h-80">
+                        <canvas id="monthlyBarChart"></canvas>
+                    </div>
+                    <div id="monthlyBarChartMessage" class="mt-4 text-center text-gray-400 text-sm hidden">
+                        Not enough data for the past 12 months.
+                    </div>
+                </div>
+
+                <!-- Monthly Line Chart -->
+                <div class="section-card flex flex-col items-center justify-center">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Monthly Trends</h2>
+                    <div class="relative w-full h-80">
+                        <canvas id="monthlyLineChart"></canvas>
+                    </div>
+                    <div id="monthlyLineChartMessage" class="mt-4 text-center text-gray-400 text-sm hidden">
+                         Not enough data for the past 12 months.
+                    </div>
+                </div>
+
+                <!-- Expense Pie Chart -->
+                <div class="lg:col-span-2 section-card flex flex-col items-center justify-center">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Spending by Category</h2>
+                    <div class="relative w-full h-80">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                    <div id="chartMessage" class="mt-4 text-center text-gray-400 text-sm">
+                        No expense data to display yet.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tax Calculator Page Section (NEW) -->
+        <div id="taxCalculatorPage" class="hidden flex flex-col gap-8 transition-opacity duration-500 ease-in-out">
+            <div class="section-card w-full mt-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-gray-700">Employee Tax Calculator</h2>
+                    <button id="backToDashboardBtn" class="py-2 px-4 border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-150 ease-in-out">
+                        Back to Dashboard
+                    </button>
+                </div>
+                <div class="text-sm text-gray-500 mb-4">
+                    <p>Estimated deductions for Canadian employees in Ontario for the 2024 tax year. This is for illustrative purposes only and may not reflect your exact paystub.</p>
+                </div>
+                <form id="taxForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                    <div>
+                        <label for="grossPay" class="block text-sm font-medium text-gray-700">Gross Pay ($)</label>
+                        <input type="number" id="grossPay" placeholder="e.g., 2000" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" step="0.01" required>
+                    </div>
+                    <div>
+                        <label for="payPeriod" class="block text-sm font-medium text-gray-700">Pay Period</label>
+                        <select id="payPeriod" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                            <option value="weekly">Weekly</option>
+                            <option value="bi-weekly">Bi-Weekly</option>
+                            <option value="semi-monthly">Semi-Monthly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="annually">Annually</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="taxYear" class="block text-sm font-medium text-gray-700">Tax Year</label>
+                        <input type="number" id="taxYear" value="2024" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" readonly>
+                    </div>
+                    <div>
+                        <label for="province" class="block text-sm font-medium text-gray-700">Province</label>
+                        <input type="text" id="province" value="Ontario" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" readonly>
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" id="calculateTaxBtn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition duration-150 ease-in-out">
+                            Calculate Taxes
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="taxResults" class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500">CPP</h4>
+                        <p id="cppResult" class="text-lg font-bold text-gray-800 mt-1">$0.00</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500">EI</h4>
+                        <p id="eiResult" class="text-lg font-bold text-gray-800 mt-1">$0.00</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500">Federal Tax</h4>
+                        <p id="federalTaxResult" class="text-lg font-bold text-gray-800 mt-1">$0.00</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500">Provincial Tax</h4>
+                        <p id="provincialTaxResult" class="text-lg font-bold text-gray-800 mt-1">$0.00</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500">Total Deductions</h4>
+                        <p id="totalDeductionsResult" class="text-lg font-bold text-red-800 mt-1">$0.00</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500">Net Pay</h4>
+                        <p id="netPayResult" class="text-lg font-bold text-green-800 mt-1">$0.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The modal for custom confirmation -->
+    <div id="confirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle">Confirm Deletion</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500" id="modalMessage">Are you sure you want to delete this transaction?</p>
+                </div>
+                <div class="items-center px-4 py-3">
+                    <button id="confirmYes" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 mr-2 shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                        Yes
+                    </button>
+                    <button id="confirmNo" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-24 shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                        No
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The new modal for simple, auto-dismissing messages -->
+    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden transition-opacity duration-500 opacity-0">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white text-center">
+            <h3 id="messageTitle" class="text-lg leading-6 font-medium text-gray-900 mt-2"></h3>
+            <p id="messageText" class="text-sm text-gray-500 mt-2"></p>
+        </div>
+    </div>
+
+    <!-- Hidden file input for importing -->
+    <input type="file" id="importFile" class="hidden" accept=".xlsx, .xls">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, signInAnonymously, signInWithCustomToken, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+      // const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+ 
+			const firebaseConfig = {
+				apiKey: "AIzaSyB0wk42yD9mEhDlXEPi2-MFBBz8gLCz0Kw",
+				authDomain: "haisys-corp.firebaseapp.com",
+				projectId: "haisys-corp",
+				storageBucket: "haisys-corp.firebasestorage.app",
+				messagingSenderId: "17791097890",
+				appId: "1:17791097890:web:fc9f209a624395085ffe7b",
+				measurementId: "G-Z0QYK6R2CF"
+			  };
+
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId;
+        let transactions = [];
+        let filteredTransactions = []; // New array for filtered data
+        let expenseChart, monthlyBarChart, monthlyLineChart;
+        let chartInitialized = false;
+        let editingTransactionId = null;
+        
+        // Pagination state variables
+        const transactionsPerPage = 5;
+        let currentPage = 1;
+        
+        // Inactivity logout timer variables
+        let logoutTimer;
+        const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+        // UI Elements
+        const authSection = document.getElementById('authSection');
+        const mainDashboard = document.getElementById('mainDashboard');
+        const taxCalculatorPage = document.getElementById('taxCalculatorPage');
+        const taxCalculatorBtn = document.getElementById('taxCalculatorBtn');
+        const backToDashboardBtn = document.getElementById('backToDashboardBtn');
+
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginMessageEl = document.getElementById('loginMessage');
+        const signupMessageEl = document.getElementById('signupMessage');
+        const showSignupLink = document.getElementById('showSignupLink');
+        const showLoginLink = document.getElementById('showLoginLink');
+        const loginFormContainer = document.getElementById('loginFormContainer');
+        const signupFormContainer = document.getElementById('signupFormContainer');
+
+        const formTitle = document.getElementById('formTitle');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const transactionIdInput = document.getElementById('transactionId');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const importBtn = document.getElementById('importBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const importFileEl = document.getElementById('importFile');
+        const subtotalInput = document.getElementById('subtotal');
+        const hstPercentageInput = document.getElementById('hstPercentage');
+        const totalIncomeEl = document.getElementById('totalIncome');
+        const totalExpensesEl = document.getElementById('totalExpenses');
+        const netBalanceEl = document.getElementById('netBalance');
+        const totalHstCollectedEl = document.getElementById('totalHstCollected');
+        const totalHstPaidEl = document.getElementById('totalHstPaid');
+        const transactionListEl = document.getElementById('transactionList');
+        const transactionForm = document.getElementById('transactionForm');
+        const userIdDisplayEl = document.getElementById('userIdDisplay');
+        const chartMessageEl = document.getElementById('chartMessage');
+        const monthlyBarChartMessageEl = document.getElementById('monthlyBarChartMessage');
+        const monthlyLineChartMessageEl = document.getElementById('monthlyLineChartMessage');
+        const categorySelect = document.getElementById('category');
+        const customCategoryContainer = document.getElementById('customCategoryContainer');
+        const customCategoryInput = document.getElementById('customCategory');
+        const descriptionInput = document.getElementById('description');
+        const typeSelect = document.getElementById('type');
+        const dateInput = document.getElementById('date');
+
+        // New filter UI elements
+        const filterDescriptionInput = document.getElementById('filterDescription');
+        const filterStartDateInput = document.getElementById('filterStartDate');
+        const filterEndDateInput = document.getElementById('filterEndDate');
+        const filterTypeSelect = document.getElementById('filterType');
+        const filterBtn = document.getElementById('filterBtn');
+        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+        
+        // Pagination UI elements
+        const paginationEl = document.getElementById('pagination');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const pageInfoEl = document.getElementById('pageInfo');
+
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmYesBtn = document.getElementById('confirmYes');
+        const confirmNoBtn = document.getElementById('confirmNo');
+        let transactionToDeleteId = null;
+
+        const messageModal = document.getElementById('messageModal');
+        const messageTitleEl = document.getElementById('messageTitle');
+        const messageTextEl = document.getElementById('messageText');
+        
+        // Tax Calculator UI elements
+        const taxForm = document.getElementById('taxForm');
+        const grossPayInput = document.getElementById('grossPay');
+        const payPeriodSelect = document.getElementById('payPeriod');
+        const cppResultEl = document.getElementById('cppResult');
+        const eiResultEl = document.getElementById('eiResult');
+        const federalTaxResultEl = document.getElementById('federalTaxResult');
+        const provincialTaxResultEl = document.getElementById('provincialTaxResult');
+        const totalDeductionsResultEl = document.getElementById('totalDeductionsResult');
+        const netPayResultEl = document.getElementById('netPayResult');
+
+
+        // Custom modal to replace window.confirm
+        const showConfirmModal = (message, onConfirm) => {
+            document.getElementById('modalTitle').textContent = 'Confirm Deletion';
+            document.getElementById('modalMessage').textContent = message;
+            confirmModal.classList.remove('hidden');
+            const handleConfirm = () => {
+                onConfirm();
+                confirmModal.classList.add('hidden');
+                confirmYesBtn.removeEventListener('click', handleConfirm);
+            };
+            confirmYesBtn.addEventListener('click', handleConfirm);
+            confirmNoBtn.onclick = () => {
+                confirmModal.classList.add('hidden');
+            };
+        };
+
+        // Custom modal for simple messages that auto-dismiss
+        const showMessage = (title, message) => {
+            messageTitleEl.textContent = title;
+            messageTextEl.textContent = message;
+            messageModal.classList.remove('hidden');
+            setTimeout(() => {
+                messageModal.classList.add('hidden');
+            }, 3000); // Hide after 3 seconds
+        };
+
+        const updateAmountDisplay = () => {
+            // Not used in this version, kept for future use if needed
+        };
+        
+        // --- Inactivity Timer Logic ---
+        const resetLogoutTimer = () => {
+            if (logoutTimer) {
+                clearTimeout(logoutTimer);
+            }
+            logoutTimer = setTimeout(() => {
+                handleLogout(true); // true to indicate it's an inactivity logout
+            }, INACTIVITY_TIMEOUT);
+        };
+
+        const setupInactivityListeners = () => {
+            window.addEventListener('mousemove', resetLogoutTimer);
+            window.addEventListener('mousedown', resetLogoutTimer);
+            window.addEventListener('keypress', resetLogoutTimer);
+            window.addEventListener('scroll', resetLogoutTimer);
+            resetLogoutTimer(); // Start the initial timer
+        };
+        
+        const removeInactivityListeners = () => {
+            if (logoutTimer) {
+                clearTimeout(logoutTimer);
+            }
+            window.removeEventListener('mousemove', resetLogoutTimer);
+            window.removeEventListener('mousedown', resetLogoutTimer);
+            window.removeEventListener('keypress', resetLogoutTimer);
+            window.removeEventListener('scroll', resetLogoutTimer);
+        };
+        // --- End Inactivity Timer Logic ---
+
+        const initializeFirebase = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                console.log("Firebase initialized. Waiting for authentication state...");
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplayEl.textContent = `User ID: ${userId}`;
+                        authSection.classList.add('hidden');
+                        mainDashboard.classList.remove('hidden');
+                        getData();
+                        setupInactivityListeners(); // Start inactivity timer
+                        console.log("User authenticated:", user.uid);
+                    } else {
+                        userId = null;
+                        authSection.classList.remove('hidden');
+                        mainDashboard.classList.add('hidden');
+                        transactions = [];
+                        filteredTransactions = [];
+                        renderTransactions();
+                        updateSummary();
+                        updateCharts();
+                        removeInactivityListeners(); // Stop inactivity timer
+                        console.log("User signed out.");
+                    }
+                });
+                
+                // Check if an initial custom token exists for the collaborative environment
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                }
+                
+                subtotalInput.addEventListener('input', updateAmountDisplay);
+                hstPercentageInput.addEventListener('input', updateAmountDisplay);
+                updateAmountDisplay();
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+            }
+        };
+
+        const handleSignup = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            signupMessageEl.textContent = '';
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log("Signed up successfully:", userCredential.user.uid);
+            } catch (error) {
+                console.error("Signup error:", error);
+                signupMessageEl.textContent = error.message.replace('Firebase: ', '');
+            }
+        };
+
+        const handleLogin = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            loginMessageEl.textContent = '';
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log("Logged in successfully:", userCredential.user.uid);
+            } catch (error) {
+                console.error("Login error:", error);
+                loginMessageEl.textContent = error.message.replace('Firebase: ', '');
+            }
+        };
+
+        const handleLogout = async (inactivity = false) => {
+            try {
+                await signOut(auth);
+                if (inactivity) {
+                    showMessage("Logged out", "You were logged out due to inactivity.");
+                }
+            } catch (error) {
+                console.error("Error signing out:", error);
+            }
+        };
+
+        const getData = () => {
+            if (!userId) {
+                console.log("No user signed in. Cannot fetch data.");
+                return;
+            }
+            const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
+            const q = query(collection(db, transactionsPath));
+
+            onSnapshot(q, (snapshot) => {
+                transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                currentPage = 1; // Reset to page 1 on new data or filters
+                applyFilters();
+                updateSummary();
+                updateCharts();
+            }, (error) => {
+                console.error("Error fetching transactions: ", error);
+            });
+        };
+
+        const updateSummary = () => {
+            const totalIncome = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + (parseFloat(t.totalAmount) || 0), 0);
+
+            const totalExpenses = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + (parseFloat(t.totalAmount) || 0), 0);
+            
+            const totalHstCollected = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + (parseFloat(t.hstAmount) || 0), 0);
+            
+            const totalHstPaid = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + (parseFloat(t.hstAmount) || 0), 0);
+
+            const netBalance = totalIncome - totalExpenses;
+
+            totalIncomeEl.textContent = `$${totalIncome.toFixed(2)}`;
+            totalExpensesEl.textContent = `$${totalExpenses.toFixed(2)}`;
+            netBalanceEl.textContent = `$${netBalance.toFixed(2)}`;
+            netBalanceEl.classList.toggle('text-red-800', netBalance < 0);
+            netBalanceEl.classList.toggle('text-green-800', netBalance >= 0);
+            
+            totalHstCollectedEl.textContent = `$${totalHstCollected.toFixed(2)}`;
+            totalHstPaidEl.textContent = `$${totalHstPaid.toFixed(2)}`;
+        };
+
+        // Renders the transactions for the current page
+        const renderTransactions = () => {
+            const noTransactionsMessage = document.getElementById('noTransactions');
+            const sortedTransactions = filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // Check if there are any transactions to display
+            if (filteredTransactions.length === 0) {
+                noTransactionsMessage.classList.remove('hidden');
+                paginationEl.classList.add('hidden');
+                transactionListEl.innerHTML = '';
+                return;
+            }
+            
+            noTransactionsMessage.classList.add('hidden');
+            
+            // Calculate start and end indices for the current page
+            const startIndex = (currentPage - 1) * transactionsPerPage;
+            const endIndex = startIndex + transactionsPerPage;
+            const transactionsToShow = sortedTransactions.slice(startIndex, endIndex);
+
+            // Clear the transaction list before rendering
+            transactionListEl.innerHTML = '';
+            
+            transactionsToShow.forEach(transaction => {
+                const isExpense = transaction.type === 'expense';
+                const sign = isExpense ? '-' : '';
+                const amountColor = isExpense ? 'text-red-600' : 'text-green-600';
+                
+                // Use a default value of 0 if subtotal or hstAmount are not present
+                const subtotal = parseFloat(transaction.subtotal) || 0;
+                const hstAmount = parseFloat(transaction.hstAmount) || 0;
+                const totalAmount = parseFloat(transaction.totalAmount) || 0;
+                
+                const transactionItem = document.createElement('div');
+                transactionItem.className = `transaction-item`;
+                transactionItem.setAttribute('data-id', transaction.id);
+                // New order: Date, Description, Subtotal, HST, Total Amount, Actions
+                transactionItem.innerHTML = `
+                    <div class="text-center text-sm text-gray-500 mobile-hidden">${transaction.date}</div>
+                    <div class="sm:col-span-1">
+                        <div class="font-medium text-gray-800">${transaction.description}</div>
+                        <div class="text-xs text-gray-500">${transaction.category}</div>
+                    </div>
+                    <div class="text-center mobile-hidden">
+                        <span class="text-sm text-gray-700">$${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="text-center mobile-hidden">
+                        <span class="text-sm text-gray-700">$${hstAmount.toFixed(2)}</span>
+                    </div>
+                    <div class="text-center">
+                        <span class="text-sm font-semibold ${amountColor}">${sign}$${totalAmount.toFixed(2)}</span>
+                    </div>
+                    <div class="flex gap-2 justify-end">
+                        <button class="edit-btn text-blue-500 hover:text-blue-700 transition-colors" data-id="${transaction.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L15.232 5.232z" />
+                            </svg>
+                        </button>
+                        <button class="delete-btn text-gray-400 hover:text-red-500 transition-colors" data-id="${transaction.id}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                transactionListEl.appendChild(transactionItem);
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent the parent div's click event
+                    transactionToDeleteId = e.currentTarget.dataset.id;
+                    showConfirmModal('Are you sure you want to delete this transaction?', async () => {
+                        await deleteTransaction(transactionToDeleteId);
+                    });
+                });
+            });
+
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = e.currentTarget.dataset.id;
+                    const transaction = transactions.find(t => t.id === id);
+                    if (transaction) {
+                        editTransaction(transaction);
+                    }
+                });
+            });
+
+            updatePaginationControls();
+        };
+
+        const updatePaginationControls = () => {
+            const totalPages = Math.ceil(filteredTransactions.length / transactionsPerPage);
+            
+            if (totalPages > 1) {
+                paginationEl.classList.remove('hidden');
+            } else {
+                paginationEl.classList.add('hidden');
+            }
+
+            pageInfoEl.textContent = `Page ${currentPage} of ${totalPages}`;
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage >= totalPages;
+        };
+        
+        const updateCharts = () => {
+            updateExpensePieChart();
+            updateMonthlyCharts();
+        };
+
+        const updateExpensePieChart = () => {
+            const expenseData = transactions.filter(t => t.type === 'expense');
+            if (expenseData.length === 0) {
+                if (expenseChart) {
+                    expenseChart.destroy();
+                    expenseChart = null; // Set to null to indicate it needs to be re-initialized
+                }
+                chartMessageEl.classList.remove('hidden');
+                return;
+            }
+            chartMessageEl.classList.add('hidden');
+            
+            const categories = {};
+            expenseData.forEach(t => {
+                const totalAmount = parseFloat(t.totalAmount) || 0;
+                if (!categories[t.category]) {
+                    categories[t.category] = 0;
+                }
+                categories[t.category] += totalAmount;
+            });
+
+            const labels = Object.keys(categories);
+            const data = Object.values(categories);
+            
+            // Generate distinct HSL colors for each category
+            const backgroundColors = labels.map((_, i) => {
+                const hue = (i * 137) % 360; // Use a prime number for better color distribution
+                return `hsl(${hue}, 70%, 50%)`;
+            });
+            const borderColors = labels.map((_, i) => {
+                const hue = (i * 137) % 360;
+                return `hsl(${hue}, 70%, 40%)`; // Slightly darker for the border
+            });
+
+            const chartData = {
+                labels: labels,
+                datasets: [{
+                    label: 'Expenses',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            };
+
+            const config = {
+                type: 'pie',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: 'Inter',
+                                    weight: '500'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    let label = tooltipItem.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += '$' + tooltipItem.raw.toFixed(2);
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            if (expenseChart) {
+                expenseChart.data.labels = labels;
+                expenseChart.data.datasets[0].data = data;
+                expenseChart.data.datasets[0].backgroundColor = backgroundColors;
+                expenseChart.data.datasets[0].borderColor = borderColors;
+                expenseChart.update();
+            } else {
+                const ctx = document.getElementById('expenseChart').getContext('2d');
+                expenseChart = new Chart(ctx, config);
+            }
+        };
+
+        const updateMonthlyCharts = () => {
+            const twelveMonthsAgo = new Date();
+            twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+            twelveMonthsAgo.setDate(1); // Set to the first day of the month
+
+            const monthlyData = {};
+            transactions.forEach(t => {
+                const transactionDate = new Date(t.date);
+                if (transactionDate >= twelveMonthsAgo) {
+                    const yearMonth = `${transactionDate.getFullYear()}-${String(transactionDate.getMonth() + 1).padStart(2, '0')}`;
+                    if (!monthlyData[yearMonth]) {
+                        monthlyData[yearMonth] = { income: 0, expense: 0 };
+                    }
+                    if (t.type === 'income') {
+                        monthlyData[yearMonth].income += parseFloat(t.totalAmount) || 0;
+                    } else {
+                        monthlyData[yearMonth].expense += parseFloat(t.totalAmount) || 0;
+                    }
+                }
+            });
+
+            const sortedMonths = Object.keys(monthlyData).sort();
+            const labels = sortedMonths.map(ym => {
+                const [year, month] = ym.split('-');
+                const date = new Date(year, month - 1);
+                return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+            });
+            const incomeData = sortedMonths.map(ym => monthlyData[ym].income);
+            const expenseData = sortedMonths.map(ym => monthlyData[ym].expense);
+
+            if (sortedMonths.length === 0) {
+                monthlyBarChartMessageEl.classList.remove('hidden');
+                monthlyLineChartMessageEl.classList.remove('hidden');
+                if (monthlyBarChart) { monthlyBarChart.destroy(); monthlyBarChart = null; }
+                if (monthlyLineChart) { monthlyLineChart.destroy(); monthlyLineChart = null; }
+                return;
+            }
+            monthlyBarChartMessageEl.classList.add('hidden');
+            monthlyLineChartMessageEl.classList.add('hidden');
+
+            const data = {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: incomeData,
+                        backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                        borderColor: 'rgb(79, 70, 229)',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Expenses',
+                        data: expenseData,
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        tension: 0.4
+                    }
+                ]
+            };
+            
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            };
+
+            // Bar Chart
+            if (monthlyBarChart) {
+                monthlyBarChart.data.labels = labels;
+                monthlyBarChart.data.datasets[0].data = incomeData;
+                monthlyBarChart.data.datasets[1].data = expenseData;
+                monthlyBarChart.update();
+            } else {
+                const ctx = document.getElementById('monthlyBarChart').getContext('2d');
+                monthlyBarChart = new Chart(ctx, { type: 'bar', data: data, options: options });
+            }
+
+            // Line Chart
+            if (monthlyLineChart) {
+                monthlyLineChart.data.labels = labels;
+                monthlyLineChart.data.datasets[0].data = incomeData;
+                monthlyLineChart.data.datasets[1].data = expenseData;
+                monthlyLineChart.update();
+            } else {
+                const ctx = document.getElementById('monthlyLineChart').getContext('2d');
+                monthlyLineChart = new Chart(ctx, { type: 'line', data: data, options: options });
+            }
+        };
+
+        const addTransaction = async (e) => {
+            e.preventDefault();
+            const description = document.getElementById('description').value;
+            const subtotal = parseFloat(document.getElementById('subtotal').value) || 0;
+            const hstPercentage = parseFloat(document.getElementById('hstPercentage').value) || 0;
+            const type = document.getElementById('type').value;
+            const date = document.getElementById('date').value;
+            
+            let category = categorySelect.value;
+            if (category === 'Custom') {
+                category = customCategoryInput.value.trim();
+                if (!category) {
+                    showMessage("Error", "Please enter a custom category or select one from the list.");
+                    return;
+                }
+            }
+            if (category === "") {
+                showMessage("Error", "Please select a category.");
+                return;
+            }
+            
+            const hstAmount = subtotal * (hstPercentage / 100);
+            const totalAmount = subtotal + hstAmount;
+
+            const newTransaction = {
+                description,
+                subtotal: subtotal,
+                hstPercentage: hstPercentage,
+                hstAmount: hstAmount,
+                totalAmount: totalAmount,
+                type,
+                category,
+                date,
+                createdAt: new Date()
+            };
+
+            try {
+                const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
+                if (editingTransactionId) {
+                    await setDoc(doc(db, transactionsPath, editingTransactionId), newTransaction);
+                    editingTransactionId = null;
+                    resetForm();
+                    showMessage("Success", "Transaction updated successfully!");
+                } else {
+                    await addDoc(collection(db, transactionsPath), newTransaction);
+                    transactionForm.reset();
+                    customCategoryContainer.classList.add('hidden');
+                    categorySelect.value = "";
+                }
+            } catch (error) {
+                console.error("Error saving document: ", error);
+            }
+        };
+
+        const deleteTransaction = async (id) => {
+            try {
+                const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
+                await deleteDoc(doc(db, transactionsPath, id));
+            } catch (error) {
+                console.error("Error removing document: ", error);
+            }
+        };
+
+        // Function to export all transactions to an Excel file
+        const exportTransactions = () => {
+            if (transactions.length === 0) {
+                showMessage("Info", "No transactions to export.");
+                return;
+            }
+
+            // Create a worksheet
+            const worksheetData = [
+                ["Date", "Description", "Category", "Type", "Subtotal", "HST %", "HST Amount", "Total Amount"]
+            ];
+            
+            transactions.forEach(t => {
+                worksheetData.push([
+                    t.date,
+                    t.description,
+                    t.category,
+                    t.type,
+                    parseFloat(t.subtotal) || 0,
+                    parseFloat(t.hstPercentage) || 0,
+                    parseFloat(t.hstAmount) || 0,
+                    parseFloat(t.totalAmount) || 0
+                ]);
+            });
+
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+
+            // Save the file
+            XLSX.writeFile(workbook, "HaisysCorp_transactions.xlsx");
+        };
+        
+        // Function to import transactions from an Excel file
+        const importTransactions = () => {
+            importFileEl.click();
+        };
+
+        importFileEl.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const importedTransactions = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (!Array.isArray(importedTransactions) || importedTransactions.length === 0) {
+                        showMessage("Error", "No data found in the imported file.");
+                        return;
+                    }
+
+                    const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
+                    
+                    const promises = importedTransactions.map(t => {
+                        // Map the Excel column names to our Firestore document fields
+                        const newTransaction = {
+                            description: t["Description"] || "",
+                            subtotal: parseFloat(t["Subtotal"]) || 0,
+                            hstPercentage: parseFloat(t["HST %"]) || 0,
+                            hstAmount: parseFloat(t["HST Amount"]) || 0,
+                            totalAmount: parseFloat(t["Total Amount"]) || 0,
+                            type: t["Type"] || "",
+                            category: t["Category"] || "",
+                            date: t["Date"] || new Date().toISOString().split('T')[0],
+                            createdAt: new Date()
+                        };
+
+                        return addDoc(collection(db, transactionsPath), newTransaction);
+                    });
+
+                    await Promise.all(promises);
+                    showMessage("Success", `Successfully imported ${promises.length} transactions.`);
+                } catch (error) {
+                    console.error("Error importing file:", error);
+                    showMessage("Error", "Failed to import file. Please ensure it's a valid Excel file with the correct format.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        const editTransaction = (transaction) => {
+            editingTransactionId = transaction.id;
+            formTitle.textContent = 'Edit Transaction';
+            submitBtn.textContent = 'Save Changes';
+            cancelEditBtn.classList.remove('hidden');
+            
+            descriptionInput.value = transaction.description;
+            subtotalInput.value = transaction.subtotal;
+            hstPercentageInput.value = transaction.hstPercentage;
+            typeSelect.value = transaction.type;
+            dateInput.value = transaction.date;
+            
+            if (document.querySelector(`#category option[value="${transaction.category}"]`)) {
+                categorySelect.value = transaction.category;
+                customCategoryContainer.classList.add('hidden');
+            } else {
+                categorySelect.value = 'Custom';
+                customCategoryContainer.classList.remove('hidden');
+                customCategoryInput.value = transaction.category;
+            }
+        };
+
+        const resetForm = () => {
+            editingTransactionId = null;
+            formTitle.textContent = 'Add New Transaction';
+            submitBtn.textContent = 'Add Transaction';
+            cancelEditBtn.classList.add('hidden');
+            transactionForm.reset();
+            customCategoryContainer.classList.add('hidden');
+        };
+
+        // Function to apply filters to the transactions array
+        const applyFilters = () => {
+            const filterText = filterDescriptionInput.value.toLowerCase().trim();
+            const filterType = filterTypeSelect.value;
+            const startDate = filterStartDateInput.value;
+            const endDate = filterEndDateInput.value;
+
+            filteredTransactions = transactions.filter(t => {
+                const transactionDate = t.date;
+                const matchesDescription = t.description.toLowerCase().includes(filterText);
+                const matchesType = filterType === 'all' || t.type === filterType;
+                const matchesStartDate = !startDate || (transactionDate >= startDate);
+                const matchesEndDate = !endDate || (transactionDate <= endDate);
+                
+                return matchesDescription && matchesType && matchesStartDate && matchesEndDate;
+            });
+            
+            currentPage = 1; // Reset to page 1 after filtering
+            renderTransactions();
+        };
+
+        // Function to reset all filters
+        const resetFilters = () => {
+            filterDescriptionInput.value = '';
+            filterStartDateInput.value = '';
+            filterEndDateInput.value = '';
+            filterTypeSelect.value = 'all';
+            applyFilters();
+        };
+        
+        // Pagination button handlers
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTransactions();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredTransactions.length / transactionsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTransactions();
+            }
+        });
+
+        // Event listeners for auth forms
+        loginForm.addEventListener('submit', handleLogin);
+        signupForm.addEventListener('submit', handleSignup);
+        showSignupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginFormContainer.classList.add('hidden');
+            signupFormContainer.classList.remove('hidden');
+            loginMessageEl.textContent = '';
+        });
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            signupFormContainer.classList.add('hidden');
+            loginFormContainer.classList.remove('hidden');
+            signupMessageEl.textContent = '';
+        });
+
+        categorySelect.addEventListener('change', () => {
+            if (categorySelect.value === 'Custom') {
+                customCategoryContainer.classList.remove('hidden');
+                customCategoryInput.required = true;
+            } else {
+                customCategoryContainer.classList.add('hidden');
+                customCategoryInput.required = false;
+            }
+        });
+
+        window.onload = initializeFirebase;
+        logoutBtn.addEventListener('click', () => handleLogout(false));
+        exportBtn.addEventListener('click', exportTransactions);
+        importBtn.addEventListener('click', importTransactions);
+        transactionForm.addEventListener('submit', addTransaction);
+        cancelEditBtn.addEventListener('click', resetForm);
+        
+        // Add event listeners for new filter buttons
+        filterBtn.addEventListener('click', applyFilters);
+        resetFiltersBtn.addEventListener('click', resetFilters);
+        
+        // --- Navigation Logic (NEW) ---
+        taxCalculatorBtn.addEventListener('click', () => {
+            mainDashboard.classList.add('hidden');
+            taxCalculatorPage.classList.remove('hidden');
+        });
+
+        backToDashboardBtn.addEventListener('click', () => {
+            taxCalculatorPage.classList.add('hidden');
+            mainDashboard.classList.remove('hidden');
+        });
+
+        // --- Tax Calculator Logic ---
+        const calculateTaxes = (e) => {
+            e.preventDefault();
+            const grossPay = parseFloat(grossPayInput.value);
+            const payPeriod = payPeriodSelect.value;
+            
+            if (isNaN(grossPay) || grossPay <= 0) {
+                showMessage("Error", "Please enter a valid gross pay.");
+                return;
+            }
+
+            // Convert gross pay to annual for calculation
+            let annualGrossPay = 0;
+            let payPeriodFactor = 0;
+            switch(payPeriod) {
+                case 'weekly':
+                    annualGrossPay = grossPay * 52;
+                    payPeriodFactor = 52;
+                    break;
+                case 'bi-weekly':
+                    annualGrossPay = grossPay * 26;
+                    payPeriodFactor = 26;
+                    break;
+                case 'semi-monthly':
+                    annualGrossPay = grossPay * 24;
+                    payPeriodFactor = 24;
+                    break;
+                case 'monthly':
+                    annualGrossPay = grossPay * 12;
+                    payPeriodFactor = 12;
+                    break;
+                case 'annually':
+                    annualGrossPay = grossPay;
+                    payPeriodFactor = 1;
+                    break;
+            }
+            
+            // 2024 Canadian Tax Rates (for illustrative purposes, Ontario)
+            const TAX_RATES_2024 = {
+                CPP_MAX_PENSIONABLE: 68500,
+                CPP_BASIC_EXEMPTION: 3500,
+                CPP_RATE: 0.0595,
+                CPP_2ND_TIER_RATE: 0.04,
+                CPP_MAX_CONTRIBUTION: 3867.50,
+                EI_MAX_INSURABLE: 63200,
+                EI_RATE: 0.0166,
+                EI_MAX_CONTRIBUTION: 1049.12,
+                FEDERAL_TAX_BRACKETS: [
+                    { limit: 53590, rate: 0.15 },
+                    { limit: 107176, rate: 0.205 },
+                    { limit: 165430, rate: 0.26 },
+                    { limit: 235675, rate: 0.29 },
+                    { limit: Infinity, rate: 0.33 }
+                ],
+                PROVINCIAL_TAX_BRACKETS_ON: [
+                    { limit: 51446, rate: 0.0505 },
+                    { limit: 102894, rate: 0.0915 },
+                    { limit: 150000, rate: 0.1116 },
+                    { limit: 220000, rate: 0.1216 },
+                    { limit: Infinity, rate: 0.1316 }
+                ],
+                FEDERAL_BASIC_PERSONAL_AMOUNT: 15428,
+                PROVINCIAL_BASIC_PERSONAL_AMOUNT_ON: 11865
+            };
+            
+            // Calculate CPP
+            let cppDeduction = 0;
+            const cppTaxable = Math.min(annualGrossPay, TAX_RATES_2024.CPP_MAX_PENSIONABLE) - TAX_RATES_2024.CPP_BASIC_EXEMPTION;
+            if (cppTaxable > 0) {
+                cppDeduction = cppTaxable * TAX_RATES_2024.CPP_RATE;
+            }
+            
+            // Calculate EI
+            let eiDeduction = Math.min(annualGrossPay, TAX_RATES_2024.EI_MAX_INSURABLE) * TAX_RATES_2024.EI_RATE;
+            
+            // Calculate Federal Tax
+            let federalTaxableIncome = Math.max(0, annualGrossPay - TAX_RATES_2024.FEDERAL_BASIC_PERSONAL_AMOUNT);
+            let federalTax = 0;
+            let prevLimit = 0;
+            TAX_RATES_2024.FEDERAL_TAX_BRACKETS.forEach(bracket => {
+                const taxableInBracket = Math.min(federalTaxableIncome, bracket.limit) - prevLimit;
+                if (taxableInBracket > 0) {
+                    federalTax += taxableInBracket * bracket.rate;
+                }
+                prevLimit = bracket.limit;
+            });
+            
+            // Calculate Provincial Tax (Ontario)
+            let provincialTaxableIncome = Math.max(0, annualGrossPay - TAX_RATES_2024.PROVINCIAL_BASIC_PERSONAL_AMOUNT_ON);
+            let provincialTax = 0;
+            prevLimit = 0;
+            TAX_RATES_2024.PROVINCIAL_TAX_BRACKETS_ON.forEach(bracket => {
+                const taxableInBracket = Math.min(provincialTaxableIncome, bracket.limit) - prevLimit;
+                if (taxableInBracket > 0) {
+                    provincialTax += taxableInBracket * bracket.rate;
+                }
+                prevLimit = bracket.limit;
+            });
+            
+            const totalDeductions = cppDeduction + eiDeduction + federalTax + provincialTax;
+            const netPay = annualGrossPay - totalDeductions;
+            
+            // Convert annual results back to the selected pay period
+            const cppPayPeriod = cppDeduction / payPeriodFactor;
+            const eiPayPeriod = eiDeduction / payPeriodFactor;
+            const federalTaxPayPeriod = federalTax / payPeriodFactor;
+            const provincialTaxPayPeriod = provincialTax / payPeriodFactor;
+            const totalDeductionsPayPeriod = totalDeductions / payPeriodFactor;
+            const netPayPayPeriod = netPay / payPeriodFactor;
+
+            // Display results
+            cppResultEl.textContent = `$${cppPayPeriod.toFixed(2)}`;
+            eiResultEl.textContent = `$${eiPayPeriod.toFixed(2)}`;
+            federalTaxResultEl.textContent = `$${federalTaxPayPeriod.toFixed(2)}`;
+            provincialTaxResultEl.textContent = `$${provincialTaxPayPeriod.toFixed(2)}`;
+            totalDeductionsResultEl.textContent = `$${totalDeductionsPayPeriod.toFixed(2)}`;
+            netPayResultEl.textContent = `$${netPayPayPeriod.toFixed(2)}`;
+        };
+
+        taxForm.addEventListener('submit', calculateTaxes);
+        // --- End Tax Calculator Logic ---
+    </script>
+</body>
+</html>

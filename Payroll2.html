@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .container {
+            max-width: 6xl;
+        }
+        table {
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+        .summary-gradient {
+            background-image: linear-gradient(to right, #4a90e2, #50b0f0);
+        }
+        .subtle-border-y {
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .deduction-cell {
+            background-color: #fefcbf;
+        }
+        .deduction-header {
+            background-color: #fcd34d;
+        }
+        /* Style for disabled form */
+        #payrollFormWrapper.disabled {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+        #payrollFormWrapper.disabled::after {
+            content: "Please select an employee to continue.";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #4b5563;
+            text-align: center;
+            width: 80%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 sm:p-8">
+
+    <div id="auth-container" class="container mx-auto bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-lg w-full transition-all duration-300 transform scale-100">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Sign In to Payroll</h1>
+        <div id="auth-form">
+            <p class="text-sm text-center text-gray-500 mb-6">Create a new account or sign in to access your payroll data. <br>Your data is tied to your email address.</p>
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 font-medium mb-2">Email</label>
+                <input type="email" id="email" placeholder="you@example.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
+                <input type="password" id="password" placeholder="••••••••" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button id="signInBtn" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md">Sign In</button>
+            <button id="signUpBtn" class="w-full mt-3 bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-300 transition-colors duration-200">Create Account</button>
+            <div id="error-message" class="mt-4 text-red-500 text-center font-medium"></div>
+        </div>
+    </div>
+
+    <!-- Main Application Content (hidden by default) -->
+    <div id="app-content" class="container mx-auto bg-white rounded-2xl shadow-xl p-6 sm:p-8 space-y-8 hidden">
+        <!-- Header -->
+        <header class="text-center">
+            <div>
+                
+	<h1 class="text-5xl font-extrabold text-white bg-indigo-600 py-3 px-6 rounded-full inline-block mx-auto mb-2">HAISYS CORP</h1>
+                <p class="text-lg text-gray-500">Employee Payroll Management</p>
+                <div id="userIdDisplay" class="mt-4 text-sm text-gray-400 font-mono break-words"></div>
+            </div>
+            <button id="logoutBtn" class="mt-4 sm:mt-0 py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                Logout
+            </button>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Employee and Pay Form -->
+            <section class="bg-gray-50 p-6 rounded-xl shadow-inner lg:col-span-2">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Employee Management</h2>
+
+                <!-- Manage Employees Section -->
+                <div class="mb-6 pb-4 border-b border-gray-200">
+                    <h3 class="text-xl font-medium text-gray-700 mb-2">Manage Employees</h3>
+                    <form id="addEmployeeForm" class="flex flex-col sm:flex-row gap-2 mb-4">
+                        <input type="text" id="newEmployeeName" placeholder="Employee Name" required
+                            class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                        <button type="submit"
+                            class="w-full sm:w-auto flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                            Save Employee
+                        </button>
+                    </form>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                         <select id="deleteEmployeeSelect"
+                            class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-2 border">
+                            <option value="" disabled selected>Select employee to delete</option>
+                        </select>
+                         <button id="deleteEmployeeBtn"
+                            class="w-full sm:w-auto flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors" disabled>
+                            Delete Selected Employee
+                        </button>
+                    </div>
+                </div>
+
+	<h2 class="text-2xl font-semibold text-gray-800 mb-4">Payroll</h2>
+
+                <div id="payrollFormWrapper" class="disabled">
+                    <form id="payrollForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Employee Name Dropdown -->
+                            <div>
+                                <label for="employeeName" class="block text-sm font-medium text-gray-700">Employee Name</label>
+                                <select id="employeeName" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                    <option value="" disabled selected>Select an employee</option>
+                                </select>
+                                <p id="noEmployeesMessage" class="mt-2 text-sm text-red-500 hidden">Please create an employee first.</p>
+                            </div>
+            
+                            <!-- Pay Cycle Dropdown -->
+                            <div>
+                                <label for="payCycle" class="block text-sm font-medium text-gray-700">Pay Cycle</label>
+                                <select id="payCycle" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+                                    <option value="weekly">Weekly</option>
+                                    <option value="bi-weekly">Bi-Weekly</option>
+                                    <option value="semi-monthly">Semi-Monthly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+
+                            <!-- Gross Pay Input -->
+                            <div>
+                                <label for="grossPay" class="block text-sm font-medium text-gray-700">Gross Pay ($)</label>
+                                <input type="number" id="grossPay" placeholder="e.g., 2000.00" step="0.01" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 p-2 border">
+                            </div>
+
+                            <!-- Pay Date Input -->
+                            <div>
+                                <label for="payDate" class="block text-sm font-medium text-gray-700">Pay Date</label>
+                                <input type="date" id="payDate" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 p-2 border">
+                            </div>
+
+                            <!-- New EI Checkbox -->
+                            <div class="md:col-span-2 flex items-center mt-2">
+                                <input type="checkbox" id="includeEI" checked
+                                    class="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                <label for="includeEI" class="ml-2 block text-sm font-medium text-gray-700">Include EI (Employment Insurance)</label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit"
+                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            Calculate & Save
+                        </button>
+                    </form>
+                </div>
+            </section>
+            
+            <!-- Payroll Summary Banner -->
+            <section class="summary-gradient text-white rounded-xl shadow-inner p-6 flex flex-col justify-around">
+                <h2 class="text-2xl font-semibold mb-4 text-center">Summary (<span id="summaryYear"></span>)</h2>
+                <div class="space-y-4">
+                    <div class="bg-white text-gray-800 p-4 rounded-lg shadow">
+                        <p class="text-sm font-medium">Total Gross Pay</p>
+                        <p id="totalGrossPayBanner" class="text-2xl font-bold">$0.00</p>
+                    </div>
+                    <div class="bg-white text-gray-800 p-4 rounded-lg shadow">
+                        <p class="text-sm font-medium">Total Deductions</p>
+                        <p id="totalDeductionsBanner" class="text-2xl font-bold">$0.00</p>
+                    </div>
+                    <div class="bg-white text-gray-800 p-4 rounded-lg shadow">
+                        <p class="text-sm font-medium">Total Net Pay</p>
+                        <p id="totalNetPayBanner" class="text-2xl font-bold">$0.00</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Payroll History Table -->
+        <section>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Payroll History</h2>
+                <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                    <label for="payrollYearFilter" class="sr-only">Filter by Year</label>
+                    <select id="payrollYearFilter"
+                        class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border text-sm w-full sm:w-auto">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                    <button id="exportBtn" class="w-full sm:w-auto py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">
+                        Export to Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg shadow-inner">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-200 text-slate-700">
+                        <tr>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider">Employee</th>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider">Pay Date</th>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider">Pay Cycle</th>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider">Gross Pay</th>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider deduction-header">CPP</th>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider deduction-header">EI</th>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider deduction-header">Fed Tax</th>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider deduction-header">Prov Tax</th>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider">Net Pay</th>
+                            <th class="p-3 text-sm font-semibold uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payrollTableBody" class="bg-gray-50 text-gray-700 divide-y divide-gray-200">
+                        <!-- Rows will be populated by JavaScript -->
+                    </tbody>
+                    <tfoot class="bg-slate-300 text-slate-900 font-bold">
+                        <tr>
+                            <td class="p-3 text-sm uppercase tracking-wider" colspan="3">Totals</td>
+                            <td id="totalGrossPay" class="p-3 text-sm"></td>
+                            <td id="totalCPP" class="p-3 text-sm deduction-cell"></td>
+                            <td id="totalEI" class="p-3 text-sm deduction-cell"></td>
+                            <td id="totalFedTax" class="p-3 text-sm deduction-cell"></td>
+                            <td id="totalProvTax" class="p-3 text-sm deduction-cell"></td>
+                            <td id="totalNetPay" class="p-3 text-sm"></td>
+                            <td class="p-3"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div id="emptyMessage" class="mt-4 text-center text-gray-500 italic hidden">No payroll records found for this employee and year.</div>
+            <div id="filterMessage" class="mt-4 text-center text-gray-500 italic hidden">Please select an employee to view their payroll history.</div>
+        </section>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modalTitle"></h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500" id="modalMessage"></p>
+            </div>
+            <div class="mt-4 flex justify-end space-x-2">
+                <button id="modalConfirmBtn" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 hidden">Confirm</button>
+                <button id="modalCloseBtn" class="px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, deleteDoc, onSnapshot, collection, serverTimestamp, setLogLevel, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Set Firebase debug logs
+        setLogLevel('debug');
+
+        // Global variables
+        let app;
+        let db;
+        let auth;
+        let userId;
+        let appId;
+        let unsubscribePayroll; // To store the unsubscribe function for payroll listener
+        let unsubscribeEmployees; // To store the unsubscribe function for employees listener
+        let currentPayrollRecords = []; // To store the latest records for export
+        const AUTH_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
+        // HTML element references
+        const authContainer = document.getElementById('auth-container');
+        const appContent = document.getElementById('app-content');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const signInBtn = document.getElementById('signInBtn');
+        const signUpBtn = document.getElementById('signUpBtn');
+        const errorMessage = document.getElementById('error-message');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        const addEmployeeForm = document.getElementById('addEmployeeForm');
+        const newEmployeeNameInput = document.getElementById('newEmployeeName');
+        const payrollFormWrapper = document.getElementById('payrollFormWrapper');
+        const payrollForm = document.getElementById('payrollForm');
+        const payrollTableBody = document.getElementById('payrollTableBody');
+        const emptyMessage = document.getElementById('emptyMessage');
+        const filterMessage = document.getElementById('filterMessage');
+        const totalGrossPayEl = document.getElementById('totalGrossPay');
+        const totalCPPEl = document.getElementById('totalCPP');
+        const totalEIEl = document.getElementById('totalEI');
+        const totalFedTaxEl = document.getElementById('totalFedTax');
+        const totalProvTaxEl = document.getElementById('totalProvTax');
+        const totalNetPayEl = document.getElementById('totalNetPay');
+        const employeeNameSelect = document.getElementById('employeeName');
+        const noEmployeesMessage = document.getElementById('noEmployeesMessage');
+        const deleteEmployeeSelect = document.getElementById('deleteEmployeeSelect');
+        const deleteEmployeeBtn = document.getElementById('deleteEmployeeBtn');
+        const includeEICheckbox = document.getElementById('includeEI');
+        const payrollYearFilter = document.getElementById('payrollYearFilter');
+        const exportBtn = document.getElementById('exportBtn');
+        
+        // New banner elements
+        const summaryYearEl = document.getElementById('summaryYear');
+        const totalGrossPayBannerEl = document.getElementById('totalGrossPayBanner');
+        const totalDeductionsBannerEl = document.getElementById('totalDeductionsBanner');
+        const totalNetPayBannerEl = document.getElementById('totalNetPayBanner');
+
+        // Modal elements
+        const messageModal = document.getElementById('messageModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        // Show custom modal message instead of alert
+        function showMessage(title, message, isConfirm = false, onConfirm) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            messageModal.classList.remove('hidden');
+            if (isConfirm) {
+                modalConfirmBtn.classList.remove('hidden');
+                modalConfirmBtn.onclick = () => {
+                    onConfirm();
+                    messageModal.classList.add('hidden');
+                };
+            } else {
+                modalConfirmBtn.classList.add('hidden');
+            }
+            modalCloseBtn.onclick = () => {
+                messageModal.classList.add('hidden');
+            };
+        }
+        
+        // Function to reset the login form fields
+        function resetLoginForm() {
+            emailInput.value = '';
+            passwordInput.value = '';
+            errorMessage.textContent = '';
+        }
+
+        // --- Firebase Authentication ---
+        // This is now called after Firebase is initialized
+        
+        // Initial Firebase and auth setup
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                //const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+const firebaseConfig = {
+				apiKey: "AIzaSyB0wk42yD9mEhDlXEPi2-MFBBz8gLCz0Kw",
+				authDomain: "haisys-corp.firebaseapp.com",
+				projectId: "haisys-corp",
+				storageBucket: "haisys-corp.firebasestorage.app",
+				messagingSenderId: "17791097890",
+				appId: "1:17791097890:web:fc9f209a624395085ffe7b",
+				measurementId: "G-Z0QYK6R2CF"
+			  };		
+			  
+
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+                if (Object.keys(firebaseConfig).length === 0) {
+                    throw new Error("Firebase config is not defined.");
+                }
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app); // 'auth' is initialized here
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user && user.email) {
+                        // User is signed in with email/password
+                        userId = user.uid;
+                        userIdDisplay.textContent = `User ID: ${userId}`;
+                        authContainer.classList.add('hidden');
+                        appContent.classList.remove('hidden');
+                        errorMessage.textContent = '';
+                        
+                        // Setup Firestore listeners after successful login
+                        setupEmployeeListener(appId, userId);
+                        populateYearFilter(appId, userId);
+
+                    } else {
+                        // User is not signed in or is signed in anonymously
+                        // Unsubscribe from any active listeners
+                        if (unsubscribeEmployees) {
+                            unsubscribeEmployees();
+                            unsubscribeEmployees = null;
+                        }
+                        if (unsubscribePayroll) {
+                            unsubscribePayroll();
+                            unsubscribePayroll = null;
+                        }
+
+                        userId = null;
+                        userIdDisplay.textContent = '';
+                        authContainer.classList.remove('hidden');
+                        appContent.classList.add('hidden');
+
+                        // Clear UI and data
+                        renderEmployeeDropdowns([]);
+                        renderPayrollTable([]);
+                        updateTotals(0, 0, 0, 0, 0, 0, 0);
+                        payrollYearFilter.innerHTML = '';
+                        summaryYearEl.textContent = '...';
+
+                        // Reset login form fields
+                        resetLoginForm();
+                    }
+                });
+
+            } catch (error) {
+                console.error("Failed to initialize Firebase:", error);
+                userIdDisplay.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        signInBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) {
+                errorMessage.textContent = 'Please enter both email and password.';
+                return;
+            }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                errorMessage.textContent = '';
+            } catch (error) {
+                console.error("Sign-in failed:", error.code, error.message);
+                errorMessage.textContent = `Sign-in failed: ${error.message}`;
+            }
+        });
+
+        signUpBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            if (!email || !password) {
+                errorMessage.textContent = 'Please enter both email and password.';
+                return;
+            }
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                errorMessage.textContent = '';
+            } catch (error) {
+                console.error("Sign-up failed:", error.code, error.message);
+                errorMessage.textContent = `Sign-up failed: ${error.message}`;
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Sign-out failed:", error.message);
+                showMessage("Logout Failed", `Sign-out failed: ${error.message}`);
+            }
+        });
+
+        // --- Firebase Firestore and App Logic ---
+
+        // Add event listener for employee creation form
+        addEmployeeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) {
+                showMessage("Authentication Error", "You must be logged in to add an employee.");
+                return;
+            }
+            const newEmployeeName = newEmployeeNameInput.value.trim();
+            if (!newEmployeeName) {
+                showMessage("Invalid Name", "Employee name cannot be empty.");
+                return;
+            }
+
+            try {
+                const employeesRef = collection(db, `/artifacts/${appId}/users/${userId}/employees`);
+                // Check if employee already exists
+                const q = query(employeesRef, where('name', '==', newEmployeeName));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    showMessage("Error", "An employee with this name already exists.");
+                    return;
+                }
+
+                await addDoc(employeesRef, {
+                    name: newEmployeeName,
+                    createdAt: serverTimestamp()
+                });
+                newEmployeeNameInput.value = '';
+            } catch (error) {
+                console.error("Error adding employee:", error);
+                showMessage("Database Error", "Failed to add employee. Please check the console for details.");
+            }
+        });
+
+        // Add event listener for employee selection change for the payroll form
+        employeeNameSelect.addEventListener('change', (e) => {
+            const selectedEmployee = e.target.value;
+            const selectedYear = payrollYearFilter.value;
+            summaryYearEl.textContent = selectedYear;
+            if (selectedEmployee) {
+                if (unsubscribePayroll) {
+                    unsubscribePayroll();
+                }
+                setupPayrollListener(appId, userId, selectedEmployee, selectedYear);
+            }
+        });
+        
+        // Add event listener for year filter change
+        payrollYearFilter.addEventListener('change', (e) => {
+            const selectedEmployee = employeeNameSelect.value;
+            const selectedYear = e.target.value;
+            summaryYearEl.textContent = selectedYear;
+            if (selectedEmployee) {
+                if (unsubscribePayroll) {
+                    unsubscribePayroll();
+                }
+                setupPayrollListener(appId, userId, selectedEmployee, selectedYear);
+            }
+        });
+
+        // Add event listener for employee selection change for the delete form
+        deleteEmployeeSelect.addEventListener('change', (e) => {
+            if (e.target.value) {
+                deleteEmployeeBtn.disabled = false;
+            } else {
+                deleteEmployeeBtn.disabled = true;
+            }
+        });
+
+        // Add event listener for delete employee button
+        deleteEmployeeBtn.addEventListener('click', () => {
+            const employeeToDelete = deleteEmployeeSelect.value;
+            if (employeeToDelete) {
+                showMessage(
+                    "Confirm Deletion",
+                    `Are you sure you want to delete ${employeeToDelete} and all their payroll data? This action cannot be undone.`,
+                    true,
+                    () => deleteEmployeeAndData(employeeToDelete)
+                );
+            } else {
+                showMessage("Error", "Please select an employee to delete.");
+            }
+        });
+
+        const deleteEmployeeAndData = async (employeeName) => {
+            try {
+                // Find and delete the employee document
+                const employeesRef = collection(db, `/artifacts/${appId}/users/${userId}/employees`);
+                const qEmployee = query(employeesRef, where("name", "==", employeeName));
+                const employeeSnapshot = await getDocs(qEmployee);
+                
+                if (employeeSnapshot.empty) {
+                    throw new Error("Employee not found.");
+                }
+
+                const employeeDoc = employeeSnapshot.docs[0];
+                await deleteDoc(employeeDoc.ref);
+
+                // Find and delete all associated payroll records
+                const payrollRef = collection(db, `/artifacts/${appId}/users/${userId}/payroll`);
+                const qPayroll = query(payrollRef, where("employeeName", "==", employeeName));
+                const payrollSnapshot = await getDocs(qPayroll);
+
+                const deletePromises = payrollSnapshot.docs.map(doc => deleteDoc(doc.ref));
+                await Promise.all(deletePromises);
+
+                // Reset UI after successful deletion
+                employeeNameSelect.value = '';
+                deleteEmployeeSelect.value = '';
+                deleteEmployeeBtn.disabled = true;
+                if (unsubscribePayroll) {
+                    unsubscribePayroll();
+                }
+                renderPayrollTable([]); // Clear the table immediately
+                updateTotals(0, 0, 0, 0, 0, 0, 0); // Clear totals
+                
+                showMessage("Success", `${employeeName} and all their payroll data have been deleted successfully.`);
+                populateYearFilter(appId, userId); // Refresh year filter
+            } catch (error) {
+                console.error("Error deleting employee and data:", error);
+                showMessage("Deletion Failed", "Failed to delete the employee and their data. Please check the console for details.");
+            }
+        };
+
+        // Setup real-time listener for employees data
+        const setupEmployeeListener = (appId, uid) => {
+            const employeesRef = collection(db, `/artifacts/${appId}/users/${uid}/employees`);
+            if (unsubscribeEmployees) {
+                unsubscribeEmployees();
+            }
+            unsubscribeEmployees = onSnapshot(employeesRef, (querySnapshot) => {
+                const employees = [];
+                querySnapshot.forEach((doc) => {
+                    employees.push({
+                        id: doc.id,
+                        name: doc.data().name
+                    });
+                });
+                renderEmployeeDropdowns(employees);
+            }, (error) => {
+                console.error("Error listening to employee data:", error);
+                // We should not show an error message on logout, so this is no longer needed.
+                // The onAuthStateChanged listener handles listener cleanup on logout.
+            });
+        };
+
+        const renderEmployeeDropdowns = (employees) => {
+            // Clear both dropdowns
+            employeeNameSelect.innerHTML = '<option value="" disabled selected>Select an employee</option>';
+            deleteEmployeeSelect.innerHTML = '<option value="" disabled selected>Select employee to delete</option>';
+
+            if (employees.length > 0) {
+                noEmployeesMessage.classList.add('hidden');
+                payrollFormWrapper.classList.remove('disabled');
+                employees.forEach(employee => {
+                    const payrollOption = document.createElement('option');
+                    payrollOption.value = employee.name;
+                    payrollOption.textContent = employee.name;
+                    employeeNameSelect.appendChild(payrollOption);
+
+                    const deleteOption = document.createElement('option');
+                    deleteOption.value = employee.name;
+                    deleteOption.textContent = employee.name;
+                    deleteEmployeeSelect.appendChild(deleteOption);
+                });
+                // Unsubscribe from payroll listener to prevent multiple listeners
+                if(unsubscribePayroll) {
+                    unsubscribePayroll();
+                }
+                // Initial call to set up payroll listener, with no selected employee
+                setupPayrollListener(appId, userId, null, new Date().getFullYear());
+            } else {
+                noEmployeesMessage.classList.remove('hidden');
+                payrollFormWrapper.classList.add('disabled');
+                // Clear payroll history if no employees exist
+                renderPayrollTable([]);
+                updateTotals(0, 0, 0, 0, 0, 0, 0);
+            }
+        };
+        
+        const populateYearFilter = async (appId, uid) => {
+            if (!uid) return;
+            try {
+                const payrollRef = collection(db, `/artifacts/${appId}/users/${uid}/payroll`);
+                const querySnapshot = await getDocs(payrollRef);
+                const years = new Set();
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.payDate) {
+                        years.add(new Date(data.payDate).getFullYear());
+                    }
+                });
+
+                const sortedYears = Array.from(years).sort((a, b) => b - a);
+                const currentYear = new Date().getFullYear();
+
+                // If current year is not in the data, add it to the top
+                if (!sortedYears.includes(currentYear)) {
+                    sortedYears.unshift(currentYear);
+                }
+
+                payrollYearFilter.innerHTML = '';
+                sortedYears.forEach(year => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    payrollYearFilter.appendChild(option);
+                });
+                
+                payrollYearFilter.value = currentYear; // Default to current year
+                summaryYearEl.textContent = currentYear; // Also set the summary year
+            } catch (error) {
+                console.error("Error populating year filter:", error);
+            }
+        };
+
+        // Simplified payroll calculation functions for demonstration (based on 2024 rates, Ontario)
+        const calculatePayroll = (grossPay, payCycle, includeEI) => {
+            let annualGrossPay = 0;
+            switch(payCycle) {
+                case 'weekly':
+                    annualGrossPay = grossPay * 52;
+                    break;
+                case 'bi-weekly':
+                    annualGrossPay = grossPay * 26;
+                    break;
+                case 'semi-monthly':
+                    annualGrossPay = grossPay * 24;
+                    break;
+                case 'monthly':
+                    annualGrossPay = grossPay * 12;
+                    break;
+            }
+
+            let cpp = 0;
+            let ei = 0;
+            let fedTax = 0;
+            let provTax = 0;
+
+            // CPP (Canada Pension Plan)
+            const cppRate = 0.0595;
+            const cppMaxEarnings = 68500;
+            const cppBasicExemption = 3500;
+            const cppPensionable = Math.min(annualGrossPay, cppMaxEarnings) - cppBasicExemption;
+            if (cppPensionable > 0) {
+                cpp = cppPensionable * cppRate;
+            }
+
+            // EI (Employment Insurance)
+            if (includeEI) {
+                const eiRate = 0.0166;
+                const eiMaxEarnings = 63200;
+                ei = Math.min(annualGrossPay, eiMaxEarnings) * eiRate;
+            }
+
+
+            // Federal Tax (Simplified)
+            let federalTaxableIncome = annualGrossPay - cpp - ei; // Simplified
+            if (federalTaxableIncome > 0) {
+                if (federalTaxableIncome <= 55867) {
+                    fedTax = federalTaxableIncome * 0.15;
+                } else if (federalTaxableIncome <= 111733) {
+                    fedTax = (55867 * 0.15) + ((federalTaxableIncome - 55867) * 0.205);
+                } else {
+                    fedTax = (55867 * 0.15) + (55866 * 0.205) + ((federalTaxableIncome - 111733) * 0.26);
+                }
+            }
+
+            // Provincial Tax (Ontario - Simplified)
+            let provincialTaxableIncome = annualGrossPay - cpp - ei; // Simplified
+            if (provincialTaxableIncome > 0) {
+                 if (provincialTaxableIncome <= 51458) {
+                    provTax = provincialTaxableIncome * 0.0505;
+                } else if (provincialTaxableIncome <= 102927) {
+                    provTax = (51458 * 0.0505) + ((provincialTaxableIncome - 51458) * 0.0915);
+                } else {
+                    provTax = (51458 * 0.0505) + (51469 * 0.0915) + ((provincialTaxableIncome - 102927) * 0.1116);
+                }
+            }
+            
+            const netPay = annualGrossPay - (cpp + ei + fedTax + provTax);
+
+            // Convert annual deductions back to the pay cycle period
+            let divisor = 1;
+            switch(payCycle) {
+                case 'weekly':
+                    divisor = 52;
+                    break;
+                case 'bi-weekly':
+                    divisor = 26;
+                    break;
+                case 'semi-monthly':
+                    divisor = 24;
+                    break;
+                case 'monthly':
+                    divisor = 12;
+                    break;
+            }
+
+            return {
+                cpp: cpp / divisor,
+                ei: ei / divisor,
+                fedTax: fedTax / divisor,
+                provTax: provTax / divisor,
+                netPay: netPay / divisor
+            };
+        };
+
+        // Handle form submission
+        payrollForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) {
+                showMessage("Authentication Error", "Please log in to save data.");
+                return;
+            }
+            const employeeName = document.getElementById('employeeName').value;
+            const payCycle = document.getElementById('payCycle').value;
+            const grossPay = parseFloat(document.getElementById('grossPay').value);
+            const payDate = document.getElementById('payDate').value;
+            const includeEI = includeEICheckbox.checked;
+
+            if (!employeeName) {
+                showMessage("Invalid Selection", "Please select an employee before calculating payroll.");
+                return;
+            }
+            if (!payCycle || isNaN(grossPay) || grossPay <= 0 || !payDate) {
+                showMessage("Invalid Input", "Please fill in all fields with valid data.");
+                return;
+            }
+
+            const deductions = calculatePayroll(grossPay, payCycle, includeEI);
+
+            try {
+                const payrollRef = collection(db, `/artifacts/${appId}/users/${userId}/payroll`);
+                await addDoc(payrollRef, {
+                    employeeName,
+                    grossPay,
+                    payCycle,
+                    payDate,
+                    ...deductions,
+                    includeEI,
+                    timestamp: serverTimestamp()
+                });
+                payrollForm.reset();
+                employeeNameSelect.value = ''; // Reset the dropdown after submission
+                populateYearFilter(appId, userId); // Refresh the year filter after adding new data
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                showMessage("Database Error", "Failed to save payroll record. Please check the console for details.");
+            }
+        });
+
+        // Setup real-time listener for payroll data
+        const setupPayrollListener = (appId, uid, employeeName, year) => {
+            if (!employeeName) {
+                renderPayrollTable([]); // Clear the table and totals if no employee is selected
+                filterMessage.classList.remove('hidden');
+                emptyMessage.classList.add('hidden');
+                updateTotals(0, 0, 0, 0, 0, 0, 0);
+                return;
+            } else {
+                filterMessage.classList.add('hidden');
+            }
+
+            const payrollRef = collection(db, `/artifacts/${appId}/users/${uid}/payroll`);
+            // Query only by employeeName to avoid Firebase index error
+            const q = query(payrollRef, where("employeeName", "==", employeeName));
+            
+            // Unsubscribe from the previous listener to prevent multiple listeners on the same collection
+            if (unsubscribePayroll) {
+                unsubscribePayroll();
+            }
+
+            // Store the new unsubscribe function
+            unsubscribePayroll = onSnapshot(q, (querySnapshot) => {
+                const records = [];
+                let totalGrossPay = 0;
+                let totalCPP = 0;
+                let totalEI = 0;
+                let totalFedTax = 0;
+                let totalProvTax = 0;
+                let totalNetPay = 0;
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const record = { id: doc.id, ...data };
+                    // Filter by year on the client side to avoid the index issue
+                    const payYear = new Date(record.payDate).getFullYear();
+                    if (payYear == year) {
+                        records.push(record);
+                        
+                        totalGrossPay += record.grossPay;
+                        totalCPP += record.cpp;
+                        totalEI += record.ei;
+                        totalFedTax += record.fedTax;
+                        totalProvTax += record.provTax;
+                        totalNetPay += record.netPay;
+                    }
+                });
+                
+                // Store records for export
+                currentPayrollRecords = records;
+
+                // Sort records by timestamp, newest first
+                records.sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
+
+                const totalDeductions = totalCPP + totalEI + totalFedTax + totalProvTax;
+
+                renderPayrollTable(records);
+                updateTotals(totalGrossPay, totalCPP, totalEI, totalFedTax, totalProvTax, totalDeductions, totalNetPay);
+            }, (error) => {
+                console.error("Error listening to payroll data:", error);
+                // We should not show an error message on logout, so this is no longer needed.
+                // The onAuthStateChanged listener handles listener cleanup on logout.
+            });
+        };
+
+        // Render payroll records to the table
+        const renderPayrollTable = (records) => {
+            payrollTableBody.innerHTML = '';
+            if (records.length === 0) {
+                emptyMessage.classList.remove('hidden');
+            } else {
+                emptyMessage.classList.add('hidden');
+            }
+
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                row.className = 'border-b last:border-b-0 even:bg-gray-100 transition-colors hover:bg-gray-200';
+                row.innerHTML = `
+                    <td class="p-3 whitespace-nowrap">${record.employeeName}</td>
+                    <td class="p-3 whitespace-nowrap">${record.payDate}</td>
+                    <td class="p-3 whitespace-nowrap capitalize">${record.payCycle}</td>
+                    <td class="p-3 whitespace-nowrap">$${record.grossPay.toFixed(2)}</td>
+                    <td class="p-3 whitespace-nowrap deduction-cell">$${record.cpp.toFixed(2)}</td>
+                    <td class="p-3 whitespace-nowrap deduction-cell">$${record.ei.toFixed(2)}</td>
+                    <td class="p-3 whitespace-nowrap deduction-cell">$${record.fedTax.toFixed(2)}</td>
+                    <td class="p-3 whitespace-nowrap deduction-cell">$${record.provTax.toFixed(2)}</td>
+                    <td class="p-3 whitespace-nowrap">$${record.netPay.toFixed(2)}</td>
+                    <td class="p-3">
+                        <button data-id="${record.id}" class="delete-btn p-2 text-gray-400 hover:text-red-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 112 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                payrollTableBody.appendChild(row);
+            });
+
+            // Attach delete button listeners
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const docId = e.currentTarget.dataset.id;
+                    showMessage("Confirm Deletion", "Are you sure you want to delete this payroll record?", true, () => deleteRecord(docId));
+                });
+            });
+        };
+
+        // Update total values in the footer and banner
+        const updateTotals = (totalGrossPay, totalCPP, totalEI, totalFedTax, totalProvTax, totalDeductions, totalNetPay) => {
+            // Update table footer
+            totalGrossPayEl.textContent = `$${totalGrossPay.toFixed(2)}`;
+            totalCPPEl.textContent = `$${totalCPP.toFixed(2)}`;
+            totalEIEl.textContent = `$${totalEI.toFixed(2)}`;
+            totalFedTaxEl.textContent = `$${totalFedTax.toFixed(2)}`;
+            totalProvTaxEl.textContent = `$${totalProvTax.toFixed(2)}`;
+            totalNetPayEl.textContent = `$${totalNetPay.toFixed(2)}`;
+
+            // Update banner
+            totalGrossPayBannerEl.textContent = `$${totalGrossPay.toFixed(2)}`;
+            totalDeductionsBannerEl.textContent = `$${totalDeductions.toFixed(2)}`;
+            totalNetPayBannerEl.textContent = `$${totalNetPay.toFixed(2)}`;
+        };
+
+        // Function to delete a payroll record
+        const deleteRecord = async (docId) => {
+            try {
+                const recordDoc = doc(db, `/artifacts/${appId}/users/${userId}/payroll`, docId);
+                await deleteDoc(recordDoc);
+            } catch (error) {
+                console.error("Error deleting document: ", error);
+                showMessage("Deletion Failed", "Failed to delete the payroll record. Please try again.");
+            }
+        };
+
+        // Export data functionality
+        exportBtn.addEventListener('click', () => {
+            if (!userId) {
+                showMessage("Error", "You must be authenticated to export data.");
+                return;
+            }
+            if (currentPayrollRecords.length === 0) {
+                showMessage("No Data", "There is no payroll data to export for the selected employee and year.");
+                return;
+            }
+
+            let totalGrossPay = 0;
+            let totalCPP = 0;
+            let totalEI = 0;
+            let totalFedTax = 0;
+            let totalProvTax = 0;
+            let totalNetPay = 0;
+
+            const exportableData = currentPayrollRecords.map(record => {
+                totalGrossPay += record.grossPay;
+                totalCPP += record.cpp;
+                totalEI += record.ei;
+                totalFedTax += record.fedTax;
+                totalProvTax += record.provTax;
+                totalNetPay += record.netPay;
+
+                return {
+                    "Employee Name": record.employeeName,
+                    "Pay Date": record.payDate,
+                    "Pay Cycle": record.payCycle,
+                    "Gross Pay ($)": parseFloat(record.grossPay.toFixed(2)),
+                    "CPP ($)": parseFloat(record.cpp.toFixed(2)),
+                    "EI ($)": parseFloat(record.ei.toFixed(2)),
+                    "Federal Tax ($)": parseFloat(record.fedTax.toFixed(2)),
+                    "Provincial Tax ($)": parseFloat(record.provTax.toFixed(2)),
+                    "Net Pay ($)": parseFloat(record.netPay.toFixed(2)),
+                };
+            });
+            
+            // Add the totals row
+            const totalRow = {
+                "Employee Name": "Totals",
+                "Pay Date": "",
+                "Pay Cycle": "",
+                "Gross Pay ($)": parseFloat(totalGrossPay.toFixed(2)),
+                "CPP ($)": parseFloat(totalCPP.toFixed(2)),
+                "EI ($)": parseFloat(totalEI.toFixed(2)),
+                "Federal Tax ($)": parseFloat(totalFedTax.toFixed(2)),
+                "Provincial Tax ($)": parseFloat(totalProvTax.toFixed(2)),
+                "Net Pay ($)": parseFloat(totalNetPay.toFixed(2)),
+            };
+
+            exportableData.push(totalRow);
+
+            const ws = XLSX.utils.json_to_sheet(exportableData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Payroll Data");
+            
+            const selectedYear = payrollYearFilter.value;
+            const fileName = `payroll_data_${selectedYear}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            showMessage("Success", "Payroll data exported successfully to an Excel file!");
+        });
+    </script>
+</body>
+</html>
